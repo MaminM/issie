@@ -18,6 +18,7 @@ open FilesIO
 open CatalogueView
 open TopMenuView
 open MenuHelpers
+open MiscMenuView
 
 //------------------------------------- Part B ---------------------------------------------------//
 //----------------------------- Sample Code for HLP25 --------------------------------------------//
@@ -80,7 +81,29 @@ let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) : Reac
     // See MiscMenuView for Breadcrumb generation functions
     // see WaveSelectView for the existing Waveform Selector search box
     // Use the existing Waveform Selector search box as a template for the new search boxes.
+    let okWaves, okSelectedWaves = WaveSimSelect.ensureWaveConsistency wsModel
+    let searchText = wsModel.SearchString
+    let filteredWaves = 
+        match searchText with
+        | "" | "-" -> okWaves
+        | "*" -> okSelectedWaves |> List.map (fun wi -> wsModel.AllWaves[wi])
+        | _ -> List.filter (fun x -> x.ViewerDisplayName.ToUpper().Contains(searchText)) okWaves
+    
+    let filteredWaveNames = filteredWaves |> List.map (fun wave -> wave.ViewerDisplayName)
+
+    let sheetNames = filteredWaveNames |> List.map (fun name -> name.Split('.') |> Array.head) //|> List.distinct
+
+    let sheetCounts = sheetNames |> List.groupBy id |> List.map (fun (name, waves) -> name, waves.Length)
+    
+    // let breadcrumbConfig = {
+    //     MiscMenuView.Constants.defaultConfig with
+
+    // }
+    
     failwithf "Not implemented yet"
+
+
+
 
 /// Displays a react element that allows the user to select waves for display in the waveform viewer.
 let selectWavesHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =

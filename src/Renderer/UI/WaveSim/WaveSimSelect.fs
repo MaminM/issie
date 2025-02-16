@@ -630,6 +630,12 @@ let selectWaves (ws: WaveSimModel) (subSheet: string list) (dispatch: Msg -> uni
                 |> List.map (fun wi -> ws.AllWaves[wi])                       
             | _ ->
                 List.filter (fun x -> x.ViewerDisplayName.ToUpper().Contains(searchText)) okWaves
+        let waveDisplayNames = wavesToDisplay |> List.map (fun wave -> wave.ViewerDisplayName)
+        let sheetNames = waveDisplayNames |> List.map (fun name -> name.Split('.') |> Array.head)
+        let sheetCounts = sheetNames |> List.groupBy id |> List.map (fun (name, waves) -> name, waves.Length)
+        printfn $"sheetCounts: {sheetCounts}"
+
+
         let showDetails = ((wavesToDisplay.Length < 10) || searchText.Length > 0) && searchText <> "-"
         wavesToDisplay
         |> makeSheetRow showDetails ws dispatch []
