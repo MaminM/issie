@@ -460,7 +460,7 @@ let viewWaveSim canvasState (model: Model) dispatch : ReactElement =
         ]
     ] [
         WaveSimSelect.selectRamModal wsModel dispatch
-        WaveSimSelect.selectWavesModal wsModel dispatch
+        WaveSimSelect.selectWavesModal wsModel dispatch model
         div [ viewWaveSimStyle ]
             [
                 top

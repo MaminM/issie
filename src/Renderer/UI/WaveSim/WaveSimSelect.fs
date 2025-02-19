@@ -23,6 +23,8 @@ open SimGraphTypes
 open SimTypes
 open DiagramStyle
 open UIPopups
+open MenuHelpers
+open TopMenuView
 
 //--------------------------------------------------------------------------------------------------------//
 //--------------------------------------------------------------------------------------------------------//
@@ -633,7 +635,8 @@ let selectWaves (ws: WaveSimModel) (subSheet: string list) (dispatch: Msg -> uni
         let waveDisplayNames = wavesToDisplay |> List.map (fun wave -> wave.ViewerDisplayName)
         let sheetNames = waveDisplayNames |> List.map (fun name -> name.Split('.') |> Array.head)
         let sheetCounts = sheetNames |> List.groupBy id |> List.map (fun (name, waves) -> name, waves.Length)
-        printfn $"sheetCounts: {sheetCounts}"
+        //printfn $"sheetCounts: {sheetCounts}"
+        //printfn $"waveDisplayNames: {waveDisplayNames}"
 
 
         let showDetails = ((wavesToDisplay.Length < 10) || searchText.Length > 0) && searchText <> "-"
@@ -655,12 +658,67 @@ let selectWavesButton (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactEle
         buttonFunc
         (str "Select Waves")
 
+///////////////////////////////////////////////////////     HLP25CODEB /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model: Model): ReactElement =
+    // See MiscMenuView for Breadcrumb generation functions
+    // see WaveSelectView for the existing Waveform Selector search box
+    // Use the existing Waveform Selector search box as a template for the new search boxes.
+    match model.CurrentProj with
+    | None -> div [] [str "No project open"]
+    | Some project ->
+        let updatedProject = ModelHelpers.getUpdatedLoadedComponents project model
+        let updatedModel = {model with CurrentProj = Some updatedProject}
+        let okWaves, okSelectedWaves = ensureWaveConsistency wsModel
+        let searchText = wsModel.SearchString
+        let filteredWaves = 
+            match searchText with
+            | "" | "-" -> okWaves
+            | "*" -> okSelectedWaves |> List.map (fun wi -> wsModel.AllWaves[wi])
+            | _ -> List.filter (fun x -> x.ViewerDisplayName.ToUpper().Contains(searchText)) okWaves
+
+        let filteredWaveNames = filteredWaves |> List.map (fun wave -> wave.ViewerDisplayName)
+
+        let sheetNames = 
+            filteredWaveNames 
+            |> List.map (fun name -> name.Split('.') |> Array.head |> fun s -> s.ToLowerInvariant()) 
+            |> List.distinct
+
+        
+        let sheetCounts = sheetNames |> List.groupBy id |> List.map (fun (name, waves) -> name, waves.Length)  // Hashamp of sheet name to number of waves in that sheet
+
+        let sheetColor (sheet:SheetTree) =
+                match List.contains sheet.SheetName sheetNames with
+                | false -> IColor.IsCustomColor "darkslategrey"
+                | true -> IColor.IsCustomColor "pink"
+
+        let breadcrumbConfig =  {
+            MiscMenuView.Constants.defaultConfig with
+                ColorFun = sheetColor
+                //BreadcrumbIdPrefix = "SheetMenuBreadcrumb"
+            }
+
+        let breadcrumbs = [
+                div [Style [TextAlign TextAlignOptions.Center; FontSize "15px"]] [str "Sheets with Design Hierarchy"]
+                MiscMenuView.hierarchyBreadcrumbs breadcrumbConfig dispatch updatedModel
+                ]
+            
+        // create a div with the breadcrumbs and the search boxes
+        div [] (breadcrumbs)
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 /// Top-level waveform selector.
 /// Modal that, when active, allows users to select waves to be viewed.
 /// Waves can be selected by clicking on their names.
 /// Waves can be filtered by typing in the search bar.
-let selectWavesModal (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
+let selectWavesModal (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model: Model): ReactElement =
     let endModal _ = 
         dispatch <| UpdateWSModel (fun ws ->
             {wsModel with
@@ -708,6 +766,7 @@ let selectWavesModal (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElem
             Modal.Card.body [Props [Style [OverflowY OverflowOptions.Visible]]] [   
                 searchBar wsModel dispatch
                 selectWaves wsModel [] dispatch
+                waveSelectBreadcrumbs wsModel dispatch model
             ]
             Modal.Card.foot [Props [Style [Display DisplayOptions.InlineBlock; Float FloatOptions.Right]]]
                 [
