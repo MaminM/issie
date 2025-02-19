@@ -293,6 +293,11 @@ type WaveSimModel = {
     RamStartLocation: Map<FComponentId, string * bigint>
     /// String which the user is searching the list of waves by.
     SearchString: string
+    ///String which the user is searching in wave sim breadcrumb display
+    WaveSearchString: string
+    SheetSearchString: string
+    ComponentSearchString: string
+    PortSearchString: string
     /// What is shown in wave sim sheet detail elements
     ShowSheetDetail: Set<string list>
     /// What is shown in wave sim component detail elements

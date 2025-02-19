@@ -18,6 +18,16 @@ open FilesIO
 open CatalogueView
 open TopMenuView
 open MenuHelpers
+//added libraries///////////////////
+open Fulma
+
+
+//NOTES
+// add new field to WsModel for search string, eg: 
+// waveSearchString, sheetSearchString, 
+// componentSearchString, portSearchString
+// make filtering functions that use these search strings.
+//filtering functions will contain match statements for search strings
 
 //------------------------------------- Part B ---------------------------------------------------//
 //----------------------------- Sample Code for HLP25 --------------------------------------------//
@@ -39,6 +49,68 @@ open MenuHelpers
 /// When a breadcrumb is clicked the corresponding sheet name is displayed in the sheet box and displayed
 /// ports and components are restricted to those in the sheet.
 /// Box 1 has additional functionality: when it is changed the component and port boxes are emptied. (good?)
+
+//------------------------------------UI ELEMENTS FOR SEARCH BOXES----------------------------------//
+let searchBoxStyle = Style [
+    MarginBottom "1rem"
+    Width "30%"
+    Float FloatOptions.Left
+]
+
+let waveSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
+    //UI to handle search for wave names
+    div [] [
+        Input.text [
+            Input.Option.Props [searchBoxStyle] //change fields depending on styles of actual breadcrumb display
+            Input.Option.Placeholder "Search wave names..."
+            Input.Option.OnChange (fun value -> 
+                dispatch <| UpdateWSModel (fun wsm -> {wsModel with WaveSearchString = value.Value.ToUpper()})
+            )
+        ]
+    ]
+
+let sheetSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
+    //UI to handle search for sheet names
+    div [] [
+        Input.text [
+            Input.Option.Props [searchBoxStyle]
+            Input.Option.Placeholder "Search sheet names..."
+            Input.Option.OnChange (fun value ->
+                dispatch <| UpdateWSModel (fun wsm -> {wsModel with SheetSearchString = value.Value.ToUpper()})
+            )
+        ]
+    ]
+
+let componentSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
+    //UI to handle search for component names
+    div [] [
+        Input.text [
+            Input.Option.Props [searchBoxStyle]
+            Input.Option.Placeholder "Search component names..."
+            Input.Option.OnChange (fun value ->
+                dispatch <| UpdateWSModel (fun wsm -> {wsModel with ComponentSearchString = value.Value.ToUpper()})
+            )
+        ]
+    ]
+
+let portSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
+    //UI to handle search for port names
+    div [] [
+        Input.text [
+            Input.Option.Props [searchBoxStyle]
+            Input.Option.Placeholder "Search port names..."
+            Input.Option.OnChange (fun value ->
+                dispatch <| UpdateWSModel (fun wsm -> {wsModel with PortSearchString = value.Value.ToUpper()})
+            )
+        ]
+    ]
+//------------------------------------------------------------------------------------------------////
+//----------------------------------FILTERING FUNCTIONS FOR EACH SEARCH BOX------------------------//
+
+let filterWaves (wsModel: WaveSimModel) (waves: Wave list) : ReactElement=
+    failwithf "Not implemented yet"
+    
+//------------------------------------------------------------------------------------------------////
 let searchBoxes (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
     // See MiscMenuView for Breadcrumb generation functions
     // see WaveSelectView for the existing Waveform Selector search box
