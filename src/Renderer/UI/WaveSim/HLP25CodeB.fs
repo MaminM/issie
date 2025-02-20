@@ -105,11 +105,59 @@ let portSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement
         ]
     ]
 //------------------------------------------------------------------------------------------------////
-//----------------------------------FILTERING FUNCTIONS FOR EACH SEARCH BOX------------------------//
+//----------------------------------FILTERING FUNCTION(S) FOR EACH SEARCH BOX------------------------//
 
-let filterWaves (wsModel: WaveSimModel) (waves: Wave list) : ReactElement=
-    failwithf "Not implemented yet"
-    
+let filterWaves (wsModel: WaveSimModel) (waves: Wave list) =
+    waves 
+    |> List.filter (fun wave -> 
+        let matchWave =
+            if wsModel.WaveSearchString = "" then true
+            else wave.ViewerDisplayName.ToUpper().Contains(wsModel.WaveSearchString)
+
+        let matchSheet = 
+            if wsModel.SheetSearchString = "" then true
+            else match wave.SubSheet with
+                    | [] -> (Simulator.getFastSim().SimulatedTopSheet)
+                                .ToUpper()
+                                .Contains(wsModel.SheetSearchString)
+                    | sheets -> sheets |> List.exists (fun sheetName -> sheetName.ToUpper().Contains(wsModel.SheetSearchString))
+
+        let matchComponent =
+            if wsModel.ComponentSearchString = "" then true
+            else wave.CompLabel.ToUpper().Contains(wsModel.ComponentSearchString)
+
+        let matchPort = 
+            if wsModel.PortSearchString = "" then true
+            else wave.PortLabel.ToUpper().Contains(wsModel.PortSearchString)
+
+        matchWave && matchSheet && matchComponent && matchPort
+        )
+
+let ensureWaveConsistency (ws:WaveSimModel) : (list<Wave> * list<WaveIndexT>) =
+    failwithf "already implemented in main issie code"
+let rec makeSheetRow (showDetails: bool) (ws: WaveSimModel) (dispatch: Msg -> unit) (subSheet: string list) (waves: Wave list) : ReactElement =
+    failwithf "already implemented in main issie code"
+//new fucntion to display wave selection rows using new filtering function
+let newSelectWaves (ws: WaveSimModel) (subSheet: string list) (dispatch: Msg -> unit) : ReactElement =
+    if not ws.WaveModalActive then div [] []
+    else
+        let okWaves, okSelectedWaves = ensureWaveConsistency ws
+        let wavesToDisplay = 
+            match ws.WaveSearchString with
+            | "-" when ws.ShowSheetDetail.Count <> 0 || ws.ShowComponentDetail.Count <> 0 || ws.ShowGroupDetail.Count <> 0 ->
+                dispatch <| SetWaveSheetSelectionOpen (ws.ShowSheetDetail |> Set.toList, false)
+                dispatch <| SetWaveGroupSelectionOpen (ws.ShowGroupDetail |> Set.toList, false)
+                dispatch <| SetWaveComponentSelectionOpen (ws.ShowComponentDetail |> Set.toList, false)
+                []
+            | "" | "-" -> filterWaves ws okWaves
+            | "*" -> 
+                okSelectedWaves
+                |> List.map (fun wi -> ws.AllWaves[wi])
+                |> fun waves -> filterWaves ws waves 
+            | _ -> filterWaves ws okWaves
+        let showDetails = ((wavesToDisplay.Length < 10)) 
+        wavesToDisplay
+        |> makeSheetRow showDetails ws dispatch []
 //------------------------------------------------------------------------------------------------////
 let searchBoxes (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
     // See MiscMenuView for Breadcrumb generation functions
