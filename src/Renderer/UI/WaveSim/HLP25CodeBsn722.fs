@@ -18,8 +18,12 @@ open FilesIO
 open CatalogueView
 open TopMenuView
 open MenuHelpers
-open MiscMenuView
+//////Added by me//////
 open Fulma
+open Fulma.Extensions.Wikiki
+open MiscMenuView
+open Constants
+open Browser.Types
 
 //------------------------------------- Part B ---------------------------------------------------//
 //----------------------------- Sample Code for HLP25 --------------------------------------------//
@@ -78,6 +82,26 @@ let implementWaveSelector (wsModel: WaveSimModel) (dispatch: Msg -> unit) (wTree
 /// Displays a breadcrumb display of the simulation design sheet hierarchy with
 /// coloured sheets indicating where the search string is found. Possibly the number of
 /// matches in each sheet is displayed.
+
+
+/////////////////////////////// Helper Functions //////////////////////////////////////
+
+let ensureWaveConsistency (ws:WaveSimModel) =
+        let fs = Simulator.getFastSim()
+        let okWaves =
+            Map.values ws.AllWaves
+            |> Seq.toList
+            |> List.filter (fun wave -> Map.containsKey wave.WaveId.Id fs.WaveComps )
+        if okWaves.Length <> ws.AllWaves.Count then
+            printfn $"EnsureWaveConsistency: waves,Length={okWaves.Length}, ws.Allwaves.Count={ws.AllWaves.Count}"
+        let okSelectedWaves =
+            ws.SelectedWaves
+            |> List.filter (fun selW -> Map.containsKey selW ws.AllWaves)
+        if okSelectedWaves.Length <> ws.SelectedWaves.Length then
+            printfn $"ok selected waves length = {okSelectedWaves.Length} <> selectedwaves length = {ws.SelectedWaves.Length}"
+        okWaves, okSelectedWaves 
+
+////////////////////////////////////////////////////////////////////////////////////////
 let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model: Model): ReactElement =
     // See MiscMenuView for Breadcrumb generation functions
     // see WaveSelectView for the existing Waveform Selector search box
@@ -87,7 +111,7 @@ let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
     | Some project ->
         let updatedProject = ModelHelpers.getUpdatedLoadedComponents project model
         let updatedModel = {model with CurrentProj = Some updatedProject}
-        let okWaves, okSelectedWaves = WaveSimSelect.ensureWaveConsistency wsModel
+        let okWaves, okSelectedWaves = ensureWaveConsistency wsModel
         let searchText = wsModel.SearchString
         let filteredWaves = 
             match searchText with
@@ -140,7 +164,63 @@ let selectWavesHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElem
     failwithf "Not implemented yet"
 
 
-let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
+////////////////////// HELPER FUNCTIONS  //////////////////////
+let searchBox
+    (placeholder : string)
+    (wsModel : WaveSimModel)
+    (dispatch : Msg -> unit)
+    : ReactElement =
+    
+    Control.p [ Control.IsExpanded ] [
+        Input.text [
+            Input.Option.Placeholder placeholder
+            Input.Option.OnChange (fun c ->
+                dispatch <| UpdateWSModel (fun ws -> {wsModel with SearchString = c.Value.ToUpper()})
+            )
+        ]
+    ]
+    
+
+let searchBoxesDummy (wsModel : WaveSimModel) (dispatch : Msg -> unit) : ReactElement =
+    Field.div [ Field.IsGrouped ] [
+        // 1. Wave name search
+        searchBox
+            "Search wave names..."
+            wsModel
+            dispatch
+
+        // 2. Sheet name search
+        searchBox
+            "Search sheet names..."
+            wsModel
+            dispatch
+
+        // 3. Component name search
+        searchBox
+            "Search component names..."
+            wsModel
+            dispatch
+
+        // 4. Port name search
+        searchBox
+            "Search port names..."
+            wsModel
+            dispatch
+    ]
+
+
+let infoButton  : ReactElement =
+    div 
+        [
+            HTMLAttr.ClassName $"{Tooltip.ClassName} {Tooltip.IsMultiline} {Tooltip.IsInfo} {Tooltip.IsTooltipRight}"
+            Tooltip.dataTooltip "Find ports by any part of their name. '.' = show all. '*' = show selected. '-' = collapse all"
+            Style [FontSize "25px"; MarginTop "0px"; MarginLeft "10px"; Float FloatOptions.Left]] 
+        [str Constants.infoSignUnicode]
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model: Model): ReactElement =
     // See WaveSimSelect.selectWavesModal for the existing Waveform Selector top level view
     // This contains a search box to filter waves, and a wave selection box to select/deselect
     // the (filtered) waves for display.
@@ -168,5 +248,101 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : Reac
     // Note that each signal can be selected in multiple places, from its driving port, and its receiving port(s).
     // Although these are separate waves only one wave from each signal will be allowed in the waveform viewer.
     // Duplicates are filtered out: 
-    failwithf "Not implemented yet"
+    let endModal _ = 
+        dispatch <| UpdateWSModel (fun ws ->
+            {wsModel with
+                WaveModalActive = false
+                SearchString = ""
+            })
+    Modal.modal [
+        Modal.IsActive wsModel.WaveModalActive
+        Modal.Props [Style [ZIndex 20000]]
+    ] [
+        Modal.background [
+            Props [
+                OnClick (fun _ -> dispatch <| UpdateWSModel (fun ws -> {wsModel with WaveModalActive = false}))
+            ]
+        ] []
+        Modal.Card.card [Props [Style [MinWidth "900px"]]] [
+            Modal.Card.head [] [
+                Modal.Card.title [] [
+                    Level.level [] [
+                        Level.left [] [ str "Select Waves" ]
+                        Level.right [
+                        ] [ Delete.delete [
+                                Delete.Option.Size IsMedium
+                                Delete.Option.OnClick (
+                                    fun _ ->
+                                        let numWaves = wsModel.SelectedWaves.Length
+                                        if numWaves > 50 then
+                                            UIPopups.viewWaveSelectConfirmationPopup
+                                                50
+                                                numWaves
+                                                (fun finish _ -> 
+                                                        dispatch ClosePopup
+                                                        match finish with | true -> endModal() | false -> ()) 
+                                                dispatch
+                                        else
+                                            endModal())
+                                    
+                                    
+                                
+                            ] []
+                        ]
+                    ]
+                ]
+            ]
+            Modal.Card.body [
+                Props [
+                    Style [
+                        OverflowY OverflowOptions.Visible
+                        Display DisplayOptions.Grid
+                        GridTemplateColumns "1fr 1fr"
+                        GridGap "10px"
+                        Width "100%"
+                    ]
+                ]
+            ] [
+                div [
+                    Style [
+                        GridColumn "1 / span 2"
+                        MarginBottom "15px"
+                        Display DisplayOptions.Flex
+                        JustifyContent "space-between"
+                        AlignItems AlignItemsOptions.Center
+                    ]
+                ] [
+                    // infoButton on the left
+                    div [] [ infoButton ]
+                    
+                    // waves selected message on the right
+                    div [] [ str $"{wsModel.SelectedWaves.Length} waves selected" ]
+                ]
 
+                // Search bar at the top (spanning both columns)
+                div [
+                    Style [
+                        GridColumn "1 / span 2" 
+                        MarginBottom "15px"
+                    ]
+                ] [ 
+                    searchBoxesDummy wsModel dispatch
+                ]
+
+                // Left: Wave selector
+                div [] [ str "Select Waves Component (placeholder)" ]
+
+                // Right: Breadcrumbs
+                div [] [ waveSelectBreadcrumbs wsModel dispatch model ]
+            ]
+
+            Modal.Card.foot [Props [Style [Display DisplayOptions.InlineBlock; Float FloatOptions.Right]]]
+                [
+                    Fulma.Button.button [
+                        Fulma.Button.OnClick endModal; 
+                        Fulma.Button.Color IsSuccess; 
+                        Fulma.Button.Props [Style [Display DisplayOptions.InlineBlock; Float FloatOptions.Right]]
+                        ] [str "Done"]
+                ]
+        ]
+    ]
