@@ -31,53 +31,6 @@ open Browser.Types
 //-------------------- Modify the signatures as you see fit for your implementation---------------//
 //------------------------------------------------------------------------------------------------//
 
-/// 1. An input box for a string that can be used to seach wave names in the Waveform Selector.
-/// Any substring of a wave name of form 'sheet.CompName.PortName' should be matched.
-/// 2. A search box for parts of sheet names
-/// 3. A search box for component names.
-/// 4. A search box for port names
-/// 5. (optional) a search box for component type
-/// Overall search is AND of all five searches.
-/// The search boxes should be able to filter a list of wave names in the Waveform Selector.
-/// In addition the search boxes must change a breadcrumb display so that the user can see coloured the
-/// sheets in which matches are found.
-/// The Sheet search box 2.  has additional functionality to allow the user to navigate to the design visually.
-/// When a breadcrumb is clicked the corresponding sheet name is displayed in the sheet box and displayed
-/// ports and components are restricted to those in the sheet.
-/// Box 1 has additional functionality: when it is changed the component and port boxes are emptied. (good?)
-let searchBoxes (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
-    // See MiscMenuView for Breadcrumb generation functions
-    // see WaveSelectView for the existing Waveform Selector search box
-    // Use the existing Waveform Selector search box as a template for the new search boxes.
-    failwithf "Not implemented yet"
-
-/// Function to configure how filtered components, ports, etc are displayed in the Waveform Selector.
-/// This abstracts out decisions about how to display the Waveform Selector from its actual implementation.
-let makeWaveDisplayTree (wsModel: WaveSimModel) : WaveDisplayTree =
-    // Not required for MVP; but useful for a full implementation.
-    // This function could be written as individual HLP25 code.
-    //
-    // The wave selector display is arranged as a tree of sheets, components and ports.
-    // Nodes in the tree correspond to sets of items that are hidden and optionally displayed
-    // The actual display is currently implemented by the recursive function makeSheetTree
-    // this both doe sthe implementation and determines the recursive tree structure.
-    // 
-    // This function abstracts out the tree structure from the implementation.
-    // It could be used to implement an optimal tree structure for a given set of
-    // filtered waves.
-    failwithf "Not implemented yet"
-
-/// Converts a tree of wave display nodes into a react element that can be displayed in the Waveform Selector.
-/// The output display uses check boxes and clickables to display or hide nodes, and select/deselect waves. 
-let implementWaveSelector (wsModel: WaveSimModel) (dispatch: Msg -> unit) (wTree: WaveDisplayTree): ReactElement =
-    // This function implements the display of the waveform selection table
-    // as a set of rows that can be hidden or displayed.
-    // The structure and order of the rows is determined by the tree structure.
-    // Details to display in each row are determined by the node content.
-    // Additional details can be looked up from wsModel if necessary.
-    // This is not required for MVP, but useful for a full implementation.
-    // It could be implemented as HLP25 individual code.
-    failwithf "Not implemented yet"
 
 /// Displays a breadcrumb display of the simulation design sheet hierarchy with
 /// coloured sheets indicating where the search string is found. Possibly the number of
@@ -107,61 +60,72 @@ let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
     // see WaveSelectView for the existing Waveform Selector search box
     // Use the existing Waveform Selector search box as a template for the new search boxes.
     match model.CurrentProj with
-    | None -> div [] [str "No project open"]
+    | None -> 
+        div [] [ str "No project open" ]
     | Some project ->
+        // Update project components for current model
         let updatedProject = ModelHelpers.getUpdatedLoadedComponents project model
-        let updatedModel = {model with CurrentProj = Some updatedProject}
+        let updatedModel = { model with CurrentProj = Some updatedProject }
+
+        // Ensure consistency and extract valid waves
         let okWaves, okSelectedWaves = ensureWaveConsistency wsModel
-        let searchText = wsModel.SearchString
-        let filteredWaves = 
-            match searchText with
+
+        // Helper: Filter waves based on search string
+        let filteredWaves =
+            match wsModel.SearchString with
             | "" | "-" -> okWaves
-            | "*" -> okSelectedWaves |> List.map (fun wi -> wsModel.AllWaves[wi])
-            | _ -> List.filter (fun x -> x.ViewerDisplayName.ToUpper().Contains(searchText)) okWaves
+            | "*" -> okSelectedWaves |> List.map (fun waveId -> wsModel.AllWaves.[waveId])
+            | search ->
+                let searchUpper = search.ToUpperInvariant()
+                okWaves |> List.filter (fun wave -> wave.ViewerDisplayName.ToUpperInvariant().Contains(searchUpper))
 
         let filteredWaveNames = filteredWaves |> List.map (fun wave -> wave.ViewerDisplayName)
 
-        let sheetNames = 
-            filteredWaveNames 
-            |> List.collect (fun name -> name.Split('.') |> Array.map (fun s -> s.ToLowerInvariant()) |> Array.toList) 
-        
-        let sheetCounts = sheetNames |> List.groupBy id |> List.map (fun (name, waves) -> name, waves.Length)  // Hashamp of sheet name to number of waves in that sheet
+        // Extract sheet names from wave names by splitting on '.'
+        let sheetNames =
+            filteredWaveNames
+            |> List.collect (fun name ->
+                name.Split('.')
+                |> Array.map (fun s -> s.Trim().ToLowerInvariant())
+                |> Array.toList)
 
-        let sheetColor (sheet:SheetTree) =
-                match List.contains sheet.SheetName sheetNames with
-                | false -> IColor.IsCustomColor "darkslategrey"
-                | true -> IColor.IsCustomColor "pink"
+        // Count occurrences for each sheet name using countBy. This is used to determine the number of matching waves for each sheet.
+        let sheetCounts = sheetNames |> List.countBy id
 
+        // Determine the color based on whether the sheet is in the current search results
+        let sheetColor (sheet: SheetTree) =
+            if List.contains (sheet.SheetName.ToLowerInvariant()) sheetNames then 
+                IColor.IsCustomColor "pink"
+            else 
+                IColor.IsCustomColor "darkslategrey"
+
+        // Return the number of matching waves for a given sheet
         let sheetMatches (sheet: SheetTree) =
-            match List.tryFind (fun (name, _) -> name = sheet.SheetName) sheetCounts with
+            match List.tryFind (fun (name, _) -> name = sheet.SheetName.ToLowerInvariant()) sheetCounts with
             | Some (_, count) -> count
             | None -> 0
 
-        let breadcrumbConfig =  {
+        // When a breadcrumb is clicked, update the search string to the sheet name. This is used to filter waves.
+        let updateSearchStringHelper (sheet: SheetTree) : (Msg -> unit) -> unit =
+            fun dispatch ->
+                dispatch (UpdateWSModel (fun ws -> { ws with SearchString = sheet.SheetName.ToUpperInvariant() }))
+
+        // Build the breadcrumb configuration using our helper functions
+        let breadcrumbConfig = {
             MiscMenuView.Constants.defaultConfig with
+                ClickAction = updateSearchStringHelper
                 ColorFun = sheetColor
                 NoWaves = sheetMatches
-            }
+        }
 
+        // Compose the breadcrumb display
         let breadcrumbs = [
-                div [Style [TextAlign TextAlignOptions.Center; FontSize "15px"]] [str "Sheets with Design Hierarchy"]
-                MiscMenuView.hierarchyBreadcrumbs breadcrumbConfig dispatch updatedModel
-                ]
-
-        div [] (breadcrumbs)
-
+            div [ Style [ TextAlign TextAlignOptions.Center; FontSize "15px" ] ] [ str "Sheets with Design Hierarchy" ]
+            MiscMenuView.hierarchyBreadcrumbs breadcrumbConfig dispatch updatedModel
+        ]
+        div [] breadcrumbs
 
 
-
-/// Displays a react element that allows the user to select waves for display in the waveform viewer.
-let selectWavesHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
-    // see WaveSimSelect.selectWaves for the existing display of waveforms to select
-    // For MVP this could be a cut-down version of that function that displays a flat list of components
-    // and hidable ports, with a checkbox to select each one.
-    // For a full implementation: this function could be abstracted as the two functions above:
-    //    makeWaveDisplayTree: that determines the tree structure of the display
-    //    implementWaveSelector: that displays the given tree structure
-    failwithf "Not implemented yet"
 
 
 ////////////////////// HELPER FUNCTIONS  //////////////////////
@@ -248,50 +212,56 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
     // Note that each signal can be selected in multiple places, from its driving port, and its receiving port(s).
     // Although these are separate waves only one wave from each signal will be allowed in the waveform viewer.
     // Duplicates are filtered out: 
-    let endModal _ = 
-        dispatch <| UpdateWSModel (fun ws ->
-            {wsModel with
-                WaveModalActive = false
-                SearchString = ""
-            })
+
+    // Helper to close the modal and reset search string
+    let closeModal () =
+        dispatch (UpdateWSModel (fun ws -> { ws with WaveModalActive = false; SearchString = "" }))
+
+    // Handler for closing the modal via the delete button,
+    // showing a confirmation popup if more than 50 waves are selected.
+    let handleModalClose _ =
+        let numWaves = List.length wsModel.SelectedWaves
+        if numWaves > 50 then
+            UIPopups.viewWaveSelectConfirmationPopup
+                50
+                numWaves
+                (fun finish _ ->
+                    dispatch ClosePopup
+                    if finish then closeModal ())
+                dispatch
+        else
+            closeModal ()
+        // Always reset the search string
+        dispatch (UpdateWSModel (fun ws -> { ws with SearchString = "" }))
+
     Modal.modal [
         Modal.IsActive wsModel.WaveModalActive
-        Modal.Props [Style [ZIndex 20000]]
+        Modal.Props [ Style [ ZIndex 20000 ] ]
     ] [
+        // Modal background to allow closing on click
         Modal.background [
             Props [
-                OnClick (fun _ -> dispatch <| UpdateWSModel (fun ws -> {wsModel with WaveModalActive = false}))
+                OnClick (fun _ -> dispatch (UpdateWSModel (fun ws -> { ws with WaveModalActive = false })))
             ]
         ] []
-        Modal.Card.card [Props [Style [MinWidth "900px"]]] [
+        
+        // Main modal card
+        Modal.Card.card [ Props [ Style [ MinWidth "900px" ] ] ] [
+            // Modal header with title and delete button
             Modal.Card.head [] [
                 Modal.Card.title [] [
                     Level.level [] [
                         Level.left [] [ str "Select Waves" ]
-                        Level.right [
-                        ] [ Delete.delete [
+                        Level.right [] [
+                            Delete.delete [
                                 Delete.Option.Size IsMedium
-                                Delete.Option.OnClick (
-                                    fun _ ->
-                                        let numWaves = wsModel.SelectedWaves.Length
-                                        if numWaves > 50 then
-                                            UIPopups.viewWaveSelectConfirmationPopup
-                                                50
-                                                numWaves
-                                                (fun finish _ -> 
-                                                        dispatch ClosePopup
-                                                        match finish with | true -> endModal() | false -> ()) 
-                                                dispatch
-                                        else
-                                            endModal())
-                                    
-                                    
-                                
+                                Delete.Option.OnClick handleModalClose
                             ] []
                         ]
                     ]
                 ]
             ]
+            // Modal body: top row for info and search bar, then two columns for selector and breadcrumbs
             Modal.Card.body [
                 Props [
                     Style [
@@ -303,6 +273,7 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                     ]
                 ]
             ] [
+                // Top row: info button and waves count
                 div [
                     Style [
                         GridColumn "1 / span 2"
@@ -312,37 +283,175 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                         AlignItems AlignItemsOptions.Center
                     ]
                 ] [
-                    // infoButton on the left
                     div [] [ infoButton ]
-                    
-                    // waves selected message on the right
-                    div [] [ str $"{wsModel.SelectedWaves.Length} waves selected" ]
+                    div [] [ str (sprintf "%d waves selected" (List.length wsModel.SelectedWaves)) ]
                 ]
-
-                // Search bar at the top (spanning both columns)
+                // Search bar spanning both columns
                 div [
                     Style [
-                        GridColumn "1 / span 2" 
+                        GridColumn "1 / span 2"
                         MarginBottom "15px"
                     ]
-                ] [ 
+                ] [
                     searchBoxesDummy wsModel dispatch
                 ]
-
-                // Left: Wave selector
+                // Left column: placeholder for wave selection component
                 div [] [ str "Select Waves Component (placeholder)" ]
-
-                // Right: Breadcrumbs
+                // Right column: Breadcrumb display
                 div [] [ waveSelectBreadcrumbs wsModel dispatch model ]
             ]
-
-            Modal.Card.foot [Props [Style [Display DisplayOptions.InlineBlock; Float FloatOptions.Right]]]
-                [
-                    Fulma.Button.button [
-                        Fulma.Button.OnClick endModal; 
-                        Fulma.Button.Color IsSuccess; 
-                        Fulma.Button.Props [Style [Display DisplayOptions.InlineBlock; Float FloatOptions.Right]]
-                        ] [str "Done"]
-                ]
+            // Modal footer with the Done button
+            Modal.Card.foot [ Props [ Style [ Display DisplayOptions.InlineBlock; Float FloatOptions.Right ] ] ] [
+                Fulma.Button.button [
+                    Fulma.Button.OnClick (fun _ -> closeModal ())
+                    Fulma.Button.Color IsSuccess
+                    Fulma.Button.Props [ Style [ Display DisplayOptions.InlineBlock; Float FloatOptions.Right ] ]
+                ] [ str "Done" ]
+            ]
         ]
     ]
+
+
+//////////////////////////////////// TEST FUNCTIONS //////////////////////////////////////////
+let defaultWaveSimModel = {
+    DefaultCursor = CursorType.Default
+    WSConfig = {LastClock = 0; FirstClock = 0; FontSize = 12; FontWeight = 10}
+    WSConfigDialog = None
+    State = WaveSimState.Empty
+    TopSheet = ""
+    Sheets = Map.empty
+    AllWaves = Map.empty
+    SelectedWaves = []
+    Hlp25State = None
+    StartCycle = 0
+    ShownCycles = 0
+    SamplingZoom = 1
+    CursorDisplayCycle = 0
+    CursorExactClkCycle = 0
+    ClkCycleBoxIsEmpty = false
+    Radix = NumberBase.Dec 
+    WaveformColumnWidth = 0.0
+    WaveModalActive = false
+    RamModalActive = false
+    RamComps = []
+    SelectedRams = Map.empty
+    RamStartLocation = Map.empty
+    SearchString = "ALU"
+    ShowSheetDetail = Set.empty
+    ShowComponentDetail = Set.empty
+    ShowGroupDetail = Set.empty
+    HoveredLabel = None
+    DraggedIndex = None
+    PrevSelectedWaves = None
+    ScrollbarTbWidth = 0.0
+    ScrollbarTbPos = 0.0
+    ScrollbarTbOffset = None
+    ScrollbarBkgWidth = 0.0
+    ScrollbarBkgRepCycs = 0
+    ScrollbarQueueIsEmpty = true
+}
+
+
+let testWaveSelectBreadcrumbs model dispatch =
+    let action _ _ = ()
+    PopupHelpers.closablePopup
+        "Design Hierarchy of current sheet"
+        (waveSelectBreadcrumbs defaultWaveSimModel dispatch model)
+        (div [] []) []
+        dispatch
+
+let testWaveSelectModal model dispatch =
+    let action _ _ = ()
+    PopupHelpers.closablePopup
+        "Select Waves Modal"
+        (selectWavesModalHlp25 defaultWaveSimModel dispatch model)
+        (div [] []) []
+        dispatch
+
+
+//////////////////////////////////// CHANGES MADE TO THE ORIGINAL CODE //////////////////////////////////////////
+
+// type BreadcrumbConfig = {
+//     AllowDuplicateSheets: bool
+//     BreadcrumbIdPrefix: string
+//     ColorFun: SheetTree -> IColor
+//     ClickAction: SheetTree -> (Msg -> unit) -> unit
+//     ElementProps: IHTMLProp list
+//     ElementStyleProps: CSSProp list
+//     /// button options (other than OnClick and Color)
+//     ButtonOptions: Button.Option list 
+//     NoWaves: SheetTree -> int    <----- ADDED THIS FIELD TO HELP DISPLAY NUMBER OF MATCHES. LATER USED IN MiscMenuView.makeGridFromSheetsWithPositions
+//     }
+
+
+
+// let defaultConfig = {
+//         AllowDuplicateSheets = false
+//         BreadcrumbIdPrefix = "BreadcrumbDefault"
+//         ColorFun = fun _ -> IColor.IsGreyDark
+//         ClickAction = fun _ _ -> ()
+//         ElementProps = [ ]
+//         ElementStyleProps = [           
+//             Border "2px"            
+//             BorderColor "LightGrey"
+//             BorderRightColor "DarkGrey"
+//             BorderStyle "Solid"
+//             Background "LightGrey"
+//             Padding "5px"]
+//         ButtonOptions = [
+//                 Button.Size IsSmall
+//                 Button.IsOutlined
+//                 Button.IsExpanded
+//                 Button.IsFocused true
+//                 Button.Disabled false
+//                 ]
+//         NoWaves = fun _ -> 0     <----- INITIALISED TO 0
+//     }
+
+
+// Modified this function to display the number of matches on each breadcrumb sheet
+// let makeGridFromSheetsWithPositions
+//         (cfg: BreadcrumbConfig)
+//         (dispatch: Msg -> unit)
+//         (posL: (CSSGridPos*SheetTree) list)
+//             : ReactElement =
+//     posL
+//     |> List.map (fun (pos, sheet) ->
+//             let crumbId = cfg.BreadcrumbIdPrefix + ":" + sheet.SheetName + ":" + String.concat ":" sheet.LabelPath
+//             let extraStyle = match sheet.SubSheets with | [] -> [BackgroundColor "white"; BorderWidth "0px"] | _ -> cfg.ElementStyleProps
+//             let number = cfg.NoWaves sheet    <----- ADDED THIS LINE TO GET NUMBER OF MATCHES
+//             gridElement
+//                 crumbId
+//                 cfg.ElementProps
+//                 (extraStyle)
+//                 pos
+//                 (Button.button [
+//                     Button.Props [Id crumbId]
+//                     Button.Color (cfg.ColorFun sheet)
+//                     Button.Modifiers [Modifier.TextColor IColor.IsLight]
+//                     Button.OnClick(fun ev -> cfg.ClickAction sheet dispatch)
+//                     ] [
+//                         str $"{sheet.SheetName}"
+//                         if number > 0 then
+//                             div [
+//                                 Style [     
+//                                     Position PositionOptions.Absolute
+//                                     CSSProp.Bottom "0px"
+//                                     CSSProp.Right "0px"
+//                                     BackgroundColor "transparent"
+//                                     Width "20px" 
+//                                     Height "20px"
+//                                     Display DisplayOptions.Flex
+//                                     AlignItems AlignItemsOptions.Center
+//                                     JustifyContent "center"
+//                                     FontSize "10px" 
+//                                     Color "white"  
+//                                     CSSProp.Overflow OverflowOptions.Visible
+//                                 ]  <------ STYLING USED TO DISPLAY NUMBER OF MATCHES AT BOTTOM RIGHT CORNER
+//                             ] [str $"{number}"]   <----- ADDED THIS TO DISPLAY NUMBER OF MATCHES
+//                         else
+//                             null
+//                     ]))             
+
+//     |> gridBox Constants.gridBoxSeparation 
+
