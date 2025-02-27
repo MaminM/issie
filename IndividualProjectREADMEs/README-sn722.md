@@ -24,11 +24,11 @@ I have also included two GIF demonstrations—one for each of the main functions
 
 ## How to Run and Test
 
-- The code can be located in the  `indiv-check-<your-ic-login>` branch, specifically `HLP25CodeBsn722.fs` file [Permanent Link to HLP25CodeBsn722.fs file](https://github.com/your-team-repo/blob/indiv-check-your_ic_login/HLP25CodeBsn722.fs#L60-L105) 
+- The code can be located in the  `indiv-check-sn722` branch, specifically [HLP25CodeBsn722.fs](https://github.com/MaminM/issie/blob/indiv-check-sn722/src/Renderer/UI/WaveSim/HLP25CodeBsn722.fs)  file 
 
 - I have provided evidence in [Additional Information](#additional-information) that shows my modified functions in action. As a group we only decided to only modify our own respective modules/functions and avoided committing changes made to other modules/functions. This was purely done to avoide merge conflicts in the near future.
 
-- So far I have also added some test functions `testWaveSelectBreadcrumbs` and `testWaveSelectModal` which I used in `Playground.fs`. I initially created a variable `defaultWaveSimModel` which acts as dummy WaveSimModel to use in testing. The only downside is that several parts of this variable is set to empty, preventing me testing the filtering for my breadcrumbs.
+- So far I have also added some test functions [testWaveSelectBreadcrumbs](https://github.com/MaminM/issie/blob/451af7466fb668ae13e2aec407c0023823bb619d/src/Renderer/UI/WaveSim/HLP25CodeBsn722.fs#L355-L361) and [testWaveSelectModal](https://github.com/MaminM/issie/blob/451af7466fb668ae13e2aec407c0023823bb619d/src/Renderer/UI/WaveSim/HLP25CodeBsn722.fs#L363-L369) which I used in `Playground.fs`. I initially created a variable [defaultWaveSimModel](https://github.com/MaminM/issie/blob/451af7466fb668ae13e2aec407c0023823bb619d/src/Renderer/UI/WaveSim/HLP25CodeBsn722.fs#L316-L352) which acts as dummy WaveSimModel to use in testing. The only downside is that several parts of this variable is set to empty, preventing me testing the filtering for my breadcrumbs.
 
 ---
 
@@ -37,15 +37,15 @@ I have also included two GIF demonstrations—one for each of the main functions
 For assessment purposes, please refer to the following permanent links which show the relevant code and the history (via GitHub blame):
 
 - **`waveSelectBreadcrumbs` Function:**  
-  [Permanent Link to `waveSelectBreadcrumbs` Implementation](https://github.com/your-team-repo/blob/indiv-check-your_ic_login/HLP25CodeBsn722.fs#L60-L105)  
-  *(This link covers the entire function as modified on my check branch.)*
+  [Permanent Link to `waveSelectBreadcrumbs` Implementation](https://github.com/MaminM/issie/blob/451af7466fb668ae13e2aec407c0023823bb619d/src/Renderer/UI/WaveSim/HLP25CodeBsn722.fs#L58-L126)  
+  *(This link covers the entire breadcrumbs function as modified on my check branch.)*
 
 - **`selectWavesModalHlp25` Function:**  
-  [Permanent Link to `selectWavesModalHlp25` Implementation](https://github.com/your-team-repo/blob/indiv-check-your_ic_login/HLP25CodeBsn722.fs#L210-L275)  
+  [Permanent Link to `selectWavesModalHlp25` Implementation](https://github.com/MaminM/issie/blob/451af7466fb668ae13e2aec407c0023823bb619d/src/Renderer/UI/WaveSim/HLP25CodeBsn722.fs#L187-L312)  
   *(This link covers the updated modal logic and helper functions.)*
 
 - **Modified Breadcrumb Helper Comments:**  
-  [Permanent Link to Commented Modifications in Breadcrumb Code](https://github.com/your-team-repo/blob/indiv-check-your_ic_login/HLP25CodeBsn722.fs#L280-L320)  
+  [Permanent Link to Commented Modifications in Breadcrumb Code](https://github.com/MaminM/issie/blob/451af7466fb668ae13e2aec407c0023823bb619d/src/Renderer/UI/WaveSim/HLP25CodeBsn722.fs#L372-L456)  
   *(This shows the modifications in the helper code that adds the number of matches display.)*
 
 HLP25CodeBsn722 will also contain 'helper' functions used to support my testing. These are simple replicas of functions used in `MiscMenuView.fs` and `WaveSimSelect.fs`.
@@ -55,7 +55,7 @@ HLP25CodeBsn722 will also contain 'helper' functions used to support my testing.
 ## Additional Information
 
 - **GIF Demonstrations:**  
-  Two GIFs demonstrating the behavior of the updated functions have been included in the repository under the `docs/` folder:
+  Two GIFs demonstrating the behavior of the updated functions have been included in the repository under the `Evidence/` folder:
   - `waveSelectBreadcrumbs`
 
   ![Breadcrumbs Demo](Evidence/BreadcrumbsdemoGIF.gif)
@@ -77,4 +77,3 @@ Please review the perma-links for detailed evidence of the code I have added or 
 
 *This README is intended to ensure that all modifications can be clearly identified using GitHub blame, and that the integration into the larger project is seamless.*
 
-Happy coding!
