@@ -38,6 +38,7 @@ and uncomment the following lines
 |> implementWaveSelector ws dispatch 
 ```
 
+The conditions for flattening currently are simple. However, they can be made complicated and tested with. 
 ---
 
 ## GitHub Perma-Links for Code Components
@@ -54,8 +55,11 @@ For assessment purposes, please refer to the following permanent links which sho
 
 - **Tree Optimization and Validation Functions:**  
   [Permanent Link to Tree Optimization and Validation Code](https://github.com/MaminM/issie/blob/851a8772ff741701123f65cd08815629fbabbf64/src/Renderer/UI/WaveSim/HLP25CodeB_aam522.fs#L245-L265)  
-  *(This shows the functions used to optimize and validate the tree structure.)*
+  *(This shows the functions used to validate the tree structure. Not currently used)*
 
+- **`shouldFlattenX` Funtions:**
+  [Permanent Link to `shouldFlattenX` Function](https://github.com/MaminM/issie/blob/2e763424a6fbfcf4ff55e3bc8aefc307330e130c/src/Renderer/UI/WaveSim/HLP25CodeB_aam522.fs#L77-L103)
+  *(This functions dictate, the structure of the display)*
 ---
 
 ## Additional Information
@@ -84,7 +88,6 @@ For assessment purposes, please refer to the following permanent links which sho
 **After**
 
 ![Pasted image 20250228203650.png](Evidence/afterWaveDisplayTree.png)
-
-- Testing can be done by simulating different `WaveSimModel` configurations and verifying that the tree structure is correctly generated and displayed. The `optimiseSheet` and validation functions (`validateSheet`, `validateGroup`, etc.) can be used to ensure the tree is both optimized and valid.
+ 
 ---
 *This README is intended to ensure that all modifications can be clearly identified using GitHub blame, and that the integration into the larger project is seamless.*
