@@ -404,3 +404,119 @@ and validatePortNode (node: WaveTreeNode) : bool =
 //             Table.Props [
 //                 Style [BorderWidth 0]
 //             ]] [tbody [] elements]
+
+
+
+/// ------------------------ 
+/// /// Second implementation of the Tree
+///
+/// There are two main parts:
+/// 1. Build the tree
+/// 2. Optimise the tree -- based on functions that can be defined by anything stored in wsModel
+
+// ----------------------------------------------------
+// ------------------------------ Build Tree
+
+let groupComponents (components: WaveTreeNode list) : WaveTreeNode list =
+    failwith "Not implemented" // builds groups from components
+
+let rec buildSheet (showDetails: bool) (subSheet: string list) (waves: Wave list) : WaveTreeNode =
+    let fs = Simulator.getFastSim()
+
+    let partitionPortNodes (subSheet: string list) (waves: Wave list) =
+        let wavesBySheetOrComponent =
+            waves
+            |> List.groupBy (fun w -> List.truncate (subSheet.Length + 1) w.SubSheet)
+
+        let wavesOfComponents =
+            wavesBySheetOrComponent
+            |> List.filter (fun (g, _) -> g = subSheet)
+            |> List.map snd
+
+        let wavesOfSubSheets =
+            wavesBySheetOrComponent
+            |> List.filter (fun (g, _) -> g <> subSheet)
+            |> List.map snd
+
+        (wavesOfComponents, wavesOfSubSheets)
+
+    let wavesBySheetOrComponent =
+        waves
+        |> List.groupBy (fun w -> List.truncate (subSheet.Length + 1) w.SubSheet)
+
+    let wavesOfSubSheets =
+        wavesBySheetOrComponent
+        |> List.filter (fun (g, _) -> g <> subSheet)
+
+    let wavesOfComponents =
+        wavesBySheetOrComponent
+        |> List.filter (fun (g, _) -> g = subSheet)
+        |> List.collect snd
+
+    let (componentWaves, sheetWaves) = partitionPortNodes subSheet waves // splits waves into those for components and for sheets
+    let componentNodes = List.map (buildComponent showDetails) componentWaves // builds components
+    let componentGroups = groupComponents componentNodes // groups components
+    let sheets = List.map (fun waves -> buildSheet showDetails subSheet waves) sheetWaves // recursive call to re-apply wave-split rules on these sheetWaves
+
+    { WTNode = SheetNode subSheet
+      HiddenNodes = componentGroups @ sheets
+      ShowDetails = showDetails }
+
+and buildComponent (showDetails: bool) (waves: Wave list) : WaveTreeNode =
+    let compId = waves[0].WaveId.Id // Assuming all waves belong to the same component
+    let portNodes = List.map (buildPortNode showDetails) waves
+
+    { WTNode = ComponentNode compId
+      HiddenNodes = portNodes
+      ShowDetails = showDetails }
+
+and buildPortNode (showDetails: bool) (wave: Wave) : WaveTreeNode =
+    { WTNode = PortNode wave
+      HiddenNodes = []
+      ShowDetails = showDetails }
+
+// ----------------------------- Optimise Tree
+
+let rec partitionGroupAndSheet (nodes: WaveTreeNode list) : WaveTreeNode list * WaveTreeNode list =
+    match nodes with
+    | [] -> ([], [])
+    | node :: rest ->
+        let (groups, sheets) = partitionGroupAndSheet rest
+        match node.WTNode with
+        | GroupNode _ -> (node :: groups, sheets)
+        | SheetNode _ -> (groups, node :: sheets)
+        | _ -> (groups, sheets) // Handle other cases
+
+let rec optimiseSheet (node: WaveTreeNode) : WaveTreeNode =
+    match node.WTNode with
+    | SheetNode subSheet ->
+        let (groupNodes, sheetNodes) = partitionGroupAndSheet node.HiddenNodes // splits children into groups and sheets
+        let (sheetsToFlatten, otherSheets) = List.partition shouldFlattenSheet sheetNodes // identify sheets to flatten
+        let flattenedSheets = List.map flattenSheet sheetsToFlatten // flatten relevant sheets into their components and sub-sheets
+        let flattenedComponentChilds = List.collect fst flattenedSheets // combine components across relevant sheets
+        let flattenedSheetChilds = List.collect snd flattenedSheets // combine sub-sheets across relevant sheets
+        let existingComponents = extractComponentsFromGroups groupNodes // gets components of the groups
+        let newGroups = groupComponents (flattenedComponentChilds @ existingComponents) // groups components
+        let optimisedSheets = List.map optimiseSheet (otherSheets @ flattenedSheetChilds) // optimises the sub-sheets and the sheets we didn't flatten
+
+        { WTNode = SheetNode subSheet
+          HiddenNodes = newGroups @ optimisedSheets
+          ShowDetails = node.ShowDetails }
+    | _ -> node
+
+and shouldFlattenSheet (node: WaveTreeNode) : bool =
+    false
+
+and extractComponentsFromGroups (groups: WaveTreeNode list) : WaveTreeNode list =
+    groups
+    |> List.collect (fun node ->
+        match node.WTNode with
+        | GroupNode _ -> node.HiddenNodes
+        | _ -> [])
+
+and flattenSheet (node: WaveTreeNode) : WaveTreeNode list * WaveTreeNode list =
+    match node.WTNode with
+    | SheetNode _ ->
+        let (groups, sheets) = partitionGroupAndSheet node.HiddenNodes
+        (extractComponentsFromGroups groups, sheets)
+    | _ -> ([], [])
