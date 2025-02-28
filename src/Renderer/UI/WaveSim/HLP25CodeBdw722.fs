@@ -273,48 +273,47 @@ let newSelectWaves (ws: WaveSimModel) (subSheet: string list) (dispatch: Msg -> 
 //    HighlightedSheets = Set.empty
 //...
 //}
-
-// Added to Playground.fs to test functionality and rendering of search boxes
-// let testSearchBoxes (model: ModelType.Model) (dispatch: Msg -> unit) =
-//     //create dummy WaveSimModel to use for testing
-//     let (wsModel: WaveSimModel) = {
-//         WaveSearchString = ""
-//         SheetSearchString = ""
-//         ComponentSearchString = ""
-//         PortSearchString = ""
-//         ComponentTypeSearchString = ""
-//         HighlightedSheets = Set.empty
-//         ... all othe required fields for wsModel
-//     }
-//     PopupHelpers.closablePopup
-//         "Wave Search Interface"
-//         (div [] [
-//             div [] [
-//                 waveSearchBox wsModel dispatch
-//                 sheetSearchBox wsModel dispatch
-//                 componentSearchBox wsModel dispatch
-//                 portSearchBox wsModel dispatch
-//                 componentTypeSearchBox wsModel dispatch
-//             ]
-//             div [Style [
-//                 MarginTop "20px"
-//                 PaddingTop "20px"
-//                 BorderTop "1px solid #ccc"
-//             ]] [
-//                 str (sprintf "Wave Search: %s" wsModel.WaveSearchString)
-//                 br []
-//                 str (sprintf "Sheet Search: %s" wsModel.SheetSearchString)
-//                 br []
-//                 str (sprintf "Component Search: %s" wsModel.ComponentSearchString)
-//                 br []
-//                 str (sprintf "Port Search: %s" wsModel.PortSearchString)
-//                 br []
-//                 str (sprintf "Component Type Search")
-//             ]
-//         ])
-//         (div [] [])
-//         []
-//         dispatch
+//--------------------------TESTING FUNCTION-------------------//
+let testSearchBoxes (model: ModelType.Model) (dispatch: Msg -> unit) =
+    //create dummy WaveSimModel to use for testing
+    let (wsModel: WaveSimModel) = {
+        WaveSearchString = ""
+        SheetSearchString = ""
+        ComponentSearchString = ""
+        PortSearchString = ""
+        ComponentTypeSearchString = ""
+        HighlightedSheets = Set.empty
+        ... all othe required fields for wsModel
+    }
+    PopupHelpers.closablePopup
+        "Wave Search Interface"
+        (div [] [
+            div [] [
+                waveSearchBox wsModel dispatch
+                sheetSearchBox wsModel dispatch
+                componentSearchBox wsModel dispatch
+                portSearchBox wsModel dispatch
+                componentTypeSearchBox wsModel dispatch
+            ]
+            div [Style [
+                MarginTop "20px"
+                PaddingTop "20px"
+                BorderTop "1px solid #ccc"
+            ]] [
+                str (sprintf "Wave Search: %s" wsModel.WaveSearchString)
+                br []
+                str (sprintf "Sheet Search: %s" wsModel.SheetSearchString)
+                br []
+                str (sprintf "Component Search: %s" wsModel.ComponentSearchString)
+                br []
+                str (sprintf "Port Search: %s" wsModel.PortSearchString)
+                br []
+                str (sprintf "Component Type Search")
+            ]
+        ])
+        (div [] [])
+        []
+        dispatch
 
 // Added to Renderer.fs
 // makeDebugItem "Search Boxes Test" None
