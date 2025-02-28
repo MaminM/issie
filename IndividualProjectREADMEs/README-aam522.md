@@ -20,6 +20,9 @@ The key components of this implementation include:
 
 - **`implementWaveSelector`**: This function converts the hierarchical tree structure into a React element that can be displayed in the waveform selector. It uses checkboxes and clickable elements to allow users to hide/show nodes and select/deselect waveforms.
 
+- **Second tree implementation:** Worked substantially on a second implementation of a `WaveDisplayTree` constructor. It was first build and then optimised based on similarly abstracted functions to `shouldFlattenX`
+
+
 
 ---
 
@@ -60,6 +63,11 @@ For assessment purposes, please refer to the following permanent links which sho
 - **`shouldFlattenX` Funtions:**
   [Permanent Link to `shouldFlattenX` Function](https://github.com/MaminM/issie/blob/2e763424a6fbfcf4ff55e3bc8aefc307330e130c/src/Renderer/UI/WaveSim/HLP25CodeB_aam522.fs#L77-L103)
   *(This functions dictate, the structure of the display)*
+
+- **Second Tree Implementation**
+  [Permanent Link to the Second Tree Implementation](https://github.com/MaminM/issie/blob/0f1c049ea26ef773ab25c5ad1631f7e07b4602e9/src/Renderer/UI/WaveSim/HLP25CodeB_aam522.fs#L420-L522)
+  *(Did not finish, however, due to the different abstractions used, I decided it was worth being marked)*
+
 ---
 
 ## Additional Information
