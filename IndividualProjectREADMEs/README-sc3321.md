@@ -1,4 +1,4 @@
-# README - `<sc3321>`
+# README - `sc3321`
 
 ## Wave Selection & Display: Overview of Changes
 
@@ -73,7 +73,8 @@ While `selectWavesHlp25` and `makeFlatList` provide a working, flat approach, **
 
 ## 4. How to Run & Where to Access
 
-- **Branch**: `indiv-check-sc3321` or an equivalent.  
+- **Branch**: `indiv-check-sc3321`.
+- I have made changes in this branch to WaveSimSelect since it will not be merged with the rest of the group. This was also to allow you to see a working function. The isolated code, is contained in the HLPCodeBsc3321.fs file.   
 - **Permalinks**:  
   - [**`selectWavesHlp25`** and related code](https://github.com/MaminM/issie/blob/96a599c3c2b09d3a1143ea203a54239ccd28eb13/src/Renderer/UI/WaveSim/HLP25CodeBsc3321.fs#L145)  
   - [**`makeFlatList`** code](https://github.com/MaminM/issie/blob/96a599c3c2b09d3a1143ea203a54239ccd28eb13/src/Renderer/UI/WaveSim/HLP25CodeBsc3321.fs#L237)  
