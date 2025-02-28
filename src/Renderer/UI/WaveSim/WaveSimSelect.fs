@@ -587,6 +587,146 @@ let rec makeSheetRow  (showDetails: bool) (ws: WaveSimModel) (dispatch: Msg -> U
 
 //--------------------------------------------------------------------------------------------------------//
 //--------------------------------------------------------------------------------------------------------//
+//----------------------Implement Wave Select Goes Here -----------------------------//
+//--------------------------------------------------------------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------//
+
+open HLP25CodeB_aam522
+let getWaveDisplayName (wave: Wave) : string =
+    wave.SubSheet @ [wave.PortLabel] 
+    |> List.reduce (fun acc s ->acc + "." + s)
+
+
+
+let implementWaveSelector (wsModel: WaveSimModel) (dispatch: Msg -> unit) (wTree: WaveDisplayTree): ReactElement =
+    // This function implements the display of the waveform selection table
+    // as a set of rows that can be hidden or displayed.
+    // The structure and order of the rows is determined by the tree structure.
+    // Details to display in each row are determined by the node content.
+    // Additional details can be looked up from wsModel if necessary.
+    
+    /// Get the waves associated with a node for checkbox operations
+    let getWavesFromNode (node: WaveTreeNode) : Wave list =
+        let rec collectWaves (n: WaveTreeNode) : Wave list =
+            match n.WTNode with
+            | PortNode wave -> [wave]
+            | _ -> List.collect collectWaves n.HiddenNodes
+        collectWaves node
+    
+    /// Create a row for a port node (leaf node in tree)
+    let makePortNodeRow (wave: Wave) : ReactElement =
+        let subSheet =
+            match wave.SubSheet with
+            | [] -> str (Simulator.getFastSim().SimulatedTopSheet)
+            | _  -> subSheetsToNameReact wave.SubSheet
+
+        tr [] [
+            td [] [waveCheckBoxItem wsModel [wave.WaveId] dispatch]
+            // td [] [str wave.PortLabel]
+            td [] [str (getWaveDisplayName wave)]
+            td [] [
+                str <| 
+                match wave.WaveId.PortType with 
+                | PortType.Output -> "Output" 
+                | PortType.Input -> "Input"
+            ]
+        ]
+    
+    /// Create a row for a component node with its port details
+    let rec makeComponentNodeRow (node: WaveTreeNode) : ReactElement =
+        match node.WTNode with
+        | ComponentNode compId ->
+            let fc = Simulator.getFastSim().WaveComps[compId]
+            let waves = getWavesFromNode node
+            let cBox = ComponentItem fc
+            let summaryReact = summaryName wsModel cBox fc.SubSheet waves
+            let portRows = 
+                node.HiddenNodes
+                |> List.map (fun pNode -> 
+                    match pNode.WTNode with
+                    | PortNode wave -> makePortNodeRow wave
+                    | _ -> failwithf "Expected PortNode but got something else")
+
+            makeSelectionGroup node.ShowDetails wsModel dispatch summaryReact portRows cBox waves
+        | _ -> failwithf "Expected ComponentNode but got something else"
+    
+    /// Create a row for a group node with its component details
+    let rec makeGroupNodeRow (node: WaveTreeNode) : ReactElement =
+        match node.WTNode with
+        | GroupNode (cGroup, subSheet) ->
+            let waves = getWavesFromNode node
+            let cBox = GroupItem (cGroup, subSheet)
+            let summaryReact = summaryName wsModel cBox subSheet waves
+            
+            let componentRows =
+                node.HiddenNodes
+                |> List.map (fun cNode -> 
+                    match cNode.WTNode with
+                    | ComponentNode _ -> makeComponentNodeRow cNode
+                    | PortNode  wave -> makePortNodeRow wave 
+                    | _ -> failwithf "Shouldn't happen since only a Component or a Wave can be under a Group "
+                    // failwithf "Expected ComponentNode but got something else: WaveNode  "
+                )
+            makeSelectionGroup node.ShowDetails wsModel dispatch summaryReact componentRows cBox waves
+        | _ -> failwithf "Expected GroupNode but got something else"
+
+    /// Create a row for a sheet node with its group and subsheet details
+    let rec makeSheetNodeRow (node: WaveTreeNode) : ReactElement =
+        match node.WTNode with
+        | SheetNode subSheet ->
+            // If this is the top sheet, we render it differently (as a table)
+            if subSheet = [] || subSheet = [wsModel.TopSheet] then
+                let rows = 
+                    node.HiddenNodes
+                    |> List.map matchAndCreateRow
+                
+                Table.table [
+                    Table.IsBordered
+                    Table.IsFullWidth
+                    Table.Props [
+                        Style [BorderWidth 0]
+                    ]] [tbody [] rows]
+            else
+                // For non-top sheets
+                let waves = getWavesFromNode node
+                let cBox = SheetItem subSheet
+                let summaryReact = summaryName wsModel cBox subSheet waves
+                
+                // Process child nodes based on their type
+                let childRows = 
+                    node.HiddenNodes
+                    |> List.map matchAndCreateRow
+                
+                makeSelectionGroup node.ShowDetails wsModel dispatch summaryReact childRows cBox waves
+        | _ -> failwithf "Expected SheetNode but got something else"
+    
+    and  matchAndCreateRow (wtNode:WaveTreeNode) =
+        match wtNode.WTNode with
+        | GroupNode _ -> makeGroupNodeRow wtNode
+        | SheetNode _ -> makeSheetNodeRow wtNode
+        | ComponentNode _ -> makeComponentNodeRow wtNode
+        | PortNode wave -> makePortNodeRow wave
+
+    // Process each node in the wave display tree based on its type
+    let elements =
+        wTree
+        |> List.map matchAndCreateRow
+    
+    // If there's only one element and it's a table, return it directly
+    match elements with
+    | [single] -> single
+    | _ -> 
+        // Otherwise wrap all elements in a table
+        Table.table [
+            Table.IsBordered
+            Table.IsFullWidth
+            Table.Props [
+                Style [BorderWidth 0]
+            ]] [tbody [] elements]
+
+
+//--------------------------------------------------------------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------//
 //----------------------Top level Waveform Selection Modal for Wave Simulator-----------------------------//
 //--------------------------------------------------------------------------------------------------------//
 //--------------------------------------------------------------------------------------------------------//
@@ -633,8 +773,9 @@ let selectWaves (ws: WaveSimModel) (subSheet: string list) (dispatch: Msg -> uni
         let showDetails = ((wavesToDisplay.Length < 10) || searchText.Length > 0) && searchText <> "-"
         wavesToDisplay
         |> makeSheetRow showDetails ws dispatch []
-
-
+        // // using makeWaveDisplayTree and implementWaveSelect    
+        // |> makeWaveDisplayTree ws showDetails  
+        // |> implementWaveSelector ws dispatch 
 
 
 /// Button to activate wave selection modal

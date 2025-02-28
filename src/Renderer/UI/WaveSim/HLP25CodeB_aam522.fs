@@ -74,7 +74,7 @@ let makeWaveDisplayTree (wsModel: WaveSimModel) (showDetails: bool) (wavesToDisp
 
     // Functions that give maximum controllability on the structure of the tree (within reason)
     // Can be made arbitrary
-    let z = false
+    let z = true
 
     // true: Wave -> () ... fasle: Component -> Wave -> () tree
     let shouldFlattenComponent (x: Wave list) =  z
@@ -404,9 +404,3 @@ and validatePortNode (node: WaveTreeNode) : bool =
 //             Table.Props [
 //                 Style [BorderWidth 0]
 //             ]] [tbody [] elements]
-
-// let doesThisWork (string: string) (strings: string list) : string =
-//     strings @ [string]
-//     |> List.reduce (fun acc s ->acc + "." + s)
-
-// doesThisWork "abc" ["Z", "X", "Y"]
