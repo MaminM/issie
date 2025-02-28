@@ -80,17 +80,22 @@ let implementWaveSelector (wsModel: WaveSimModel) (dispatch: Msg -> unit) (wTree
 
 
 
+
+
+
+/// The functions below all work together to implement the selectWavesHlp25 function.
 /// Displays a react element that allows the user to select waves for display in the waveform viewer.
+/// Implements just simple flat sheet with grouping by component, giving a clean user interface.
+/// I have had to import some modules from WaveSimSelect as there is no forward referencing.
 /// 
-/// I have had to import some modules from WaveSimSelect for reference.
-/// 
-/// 
+
+///This is a type which seeks to provide a helpful output selection from the filtering that can be used to displau waves.
 type WaveSelectionOutput = {
     WaveList : list<Wave>
     ShowDetails : bool
 }
 
-// Filtering
+/// Filters the waves based on the entry in the search text. "*" should display all possible selected waves and otherwise it should match based on the "searchText"
 let applyFiltering 
     (ws: WaveSimModel)
     (searchText: string)
@@ -106,7 +111,24 @@ let applyFiltering
         okWaves
         |> List.filter (fun x -> x.ViewerDisplayName.ToUpper().Contains(searchText))
 
+/// function copied from the initial waveSimSelect file.
+let ensureWaveConsistency (ws:WaveSimModel) =
+        let fs = Simulator.getFastSim()
+        let okWaves =
+            Map.values ws.AllWaves
+            |> Seq.toList
+            |> List.filter (fun wave -> Map.containsKey wave.WaveId.Id fs.WaveComps )
+        if okWaves.Length <> ws.AllWaves.Count then
+            printfn $"EnsureWaveConsistency: waves,Length={okWaves.Length}, ws.Allwaves.Count={ws.AllWaves.Count}"
+        let okSelectedWaves =
+            ws.SelectedWaves
+            |> List.filter (fun selW -> Map.containsKey selW ws.AllWaves)
+        if okSelectedWaves.Length <> ws.SelectedWaves.Length then
+            printfn $"ok selected waves length = {okSelectedWaves.Length} <> selectedwaves length = {ws.SelectedWaves.Length}"
+        okWaves, okSelectedWaves
 
+
+/// Top level function that controls filtering of which waves to select and passing it onto the rendering stage. Abstracts the filtering and rendering!
 let selectWavesHlp25 (ws: WaveSimModel) (dispatch: Msg -> unit) : WaveSelectionOutput =
     if not ws.WaveModalActive then 
         { WaveList = []; ShowDetails = false }
@@ -120,7 +142,7 @@ let selectWavesHlp25 (ws: WaveSimModel) (dispatch: Msg -> unit) : WaveSelectionO
         { WaveList = wavesToDisplay
           ShowDetails = showDetails }
 
-
+/// Function that handles creation of a single row which contains waves that have been grouped by component per subsheet. This is a UI function that handles UI rendering. 
 let makeFlatGroupRow
     (showDetails: bool)
     (ws: WaveSimModel)
@@ -139,15 +161,16 @@ let makeFlatGroupRow
                 td [] [ str wave.ViewerDisplayName ]
                 td [] [
                     input [
-                        Type "checkbox"
-                        Checked (ws.SelectedWaves.Contains wave.WaveId)
-                        OnChange (fun _ -> dispatch (ToggleWave wave.WaveId))
-                    ] []
+                            Type "Checkbox"
+                            OnChange(fun _ -> toggleWaveSelection wave.WaveId ws dispatch )
+                            Checked <| isWaveSelected wave.WaveId ws 
+                    ] 
                 ]
             ]
         )
     makeSelectionGroup showDetails ws dispatch summaryReact rowItems cBox wavesInGroup
 
+/// UI function that is responsible for grouping waves by subsheet->then grouping waves based on component in each subsheet. Calls subfunction to handle rendering of the table rows themselves.
 let makeFlatList 
     (ws: WaveSimModel)
     (dispatch: Msg -> Unit)
@@ -157,22 +180,44 @@ let makeFlatList
     : ReactElement =
 
     let fs = Simulator.getFastSim()
-    let componentGroups =
+
+    // 1) Group waves first by their subSheet (Datapath, ControlPath, etc.)
+    let groupedBySubSheet =
         waves
-        |> List.groupBy (fun wave -> getCompGroup fs wave)
-    let groupRows =
-        componentGroups
-        |> List.map (fun (grp, groupWaves) ->
-            makeFlatGroupRow showDetails ws dispatch subSheet grp groupWaves
+        |> List.groupBy (fun w -> 
+            match w.SubSheet with
+            | [] -> "Top-Level" // Default if no subsheet
+            | sheetPath -> String.concat "." sheetPath // Create readable name
         )
+
+    let subSheetRows =
+        groupedBySubSheet
+        |> List.map (fun (subSheetName, wavesInSubSheet) ->
+            let componentGroups =
+                wavesInSubSheet
+                |> List.groupBy (fun wave -> getCompGroup fs wave)
+
+            let groupRows =
+                componentGroups
+                |> List.map (fun (grp, groupWaves) ->
+                    makeFlatGroupRow showDetails ws dispatch subSheet grp groupWaves
+                )
+
+            // Wrap all component groups for this subSheet in a collapsible section
+            makeSelectionGroup showDetails ws dispatch (str subSheetName) groupRows (SheetItem [subSheetName]) wavesInSubSheet
+        )
+
+    // 3) Wrap everything in a table
     Table.table [
         Table.IsBordered
         Table.IsFullWidth
         Table.Props [ Style [ BorderWidth 0 ] ]
     ] [
-        tbody [] groupRows
+        tbody [] subSheetRows
     ]
 
+
+///Top level UI function that calls the makeFlatList function. The output of HlpSelectWaves25 (target function for assignment) is what is passed as parameter into this function to handle all the rendering. 
 let renderwaves (ws: WaveSimModel) (dispatch: Msg -> unit) (waveselect: WaveSelectionOutput) : ReactElement =
     let showDetails = waveselect.ShowDetails
     let wavelist = waveselect.WaveList
@@ -213,3 +258,200 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : Reac
 
 
 
+
+
+/// Represents the user's current wave selection plus a flag controlling detail display.
+type WaveSelectionOutput = {
+    WaveList : list<Wave>
+    ShowDetails : bool
+}
+
+/// Ensures that all waves in ws.AllWaves are consistent with the simulator model,
+/// and returns only those waves that actually exist in fs.WaveComps.
+/// Also filters ws.SelectedWaves to exclude any that are no longer valid.
+let ensureWaveConsistency (ws: WaveSimModel) =
+    let fs = Simulator.getFastSim()
+
+    // Filter out any waves that no longer exist in fs.WaveComps
+    let validWaves =
+        ws.AllWaves
+        |> Map.values         // Convert from map to seq of wave
+        |> Seq.toList
+        |> List.filter (fun wave -> Map.containsKey wave.WaveId.Id fs.WaveComps)
+
+    if validWaves.Length <> ws.AllWaves.Count then
+        printfn "EnsureWaveConsistency: validWaves.Length=%d, ws.AllWaves.Count=%d"
+                validWaves.Length ws.AllWaves.Count
+
+    // Filter selected waves so we only keep valid ones
+    let validSelectedWaves =
+        ws.SelectedWaves
+        |> List.filter (fun selW -> Map.containsKey selW ws.AllWaves)
+
+    if validSelectedWaves.Length <> ws.SelectedWaves.Length then
+        printfn "Some selected waves were invalid: %d vs. %d"
+                validSelectedWaves.Length ws.SelectedWaves.Length
+
+    validWaves, validSelectedWaves
+
+
+let applyFiltering
+    (ws: WaveSimModel)
+    (searchText: string)
+    (okWaves: list<Wave>)
+    (okSelectedWaves: list<WaveIndexT>)
+    : list<Wave> =
+
+    match searchText with
+    | "*" ->
+        okSelectedWaves
+        |> List.map (fun waveId -> ws.AllWaves[waveId])
+    | _ ->
+        okWaves
+        |> List.filter (fun wave ->
+            wave.ViewerDisplayName.ToUpper().Contains(searchText)
+        )
+
+/// Produces a WaveSelectionOutput with a list of filtered waves plus a ShowDetails boolean.
+/// If ws.WaveModalActive is false, returns an empty selection.
+/// Otherwise, ensures wave consistency, applies filtering, and sets showDetails.
+let selectWavesHlp25 (ws: WaveSimModel) (dispatch: Msg -> unit) : WaveSelectionOutput =
+    if not ws.WaveModalActive then
+        { WaveList = []
+          ShowDetails = false }
+    else
+        let allWaves, selectedWaveIds = ensureWaveConsistency ws
+        let searchText = ws.SearchString.ToUpper()
+
+        // Filter waves according to search
+        let wavesToDisplay =
+            applyFiltering ws searchText allWaves selectedWaveIds
+
+        // Decide if we show details (few waves or user typed something)
+        let showDetails =
+            (wavesToDisplay.Length < 10 || searchText.Length > 0)
+            && searchText <> "-"
+
+        { WaveList = wavesToDisplay
+          ShowDetails = showDetails }
+
+/// Builds a single group row for a set of waves that share a common component group.
+/// Each wave row has a checkbox plus the wave's ViewerDisplayName.
+/// The entire group is wrapped in a makeSelectionGroup call for expand/collapse.
+let makeFlatGroupRow
+    (showDetails: bool)
+    (ws: WaveSimModel)
+    (dispatch: Msg -> Unit)
+    (subSheet: string list)       // Typically unused or empty, can remove if not needed
+    (componentGroup: ComponentGroup)
+    (wavesInGroup: Wave list)
+    : ReactElement =
+
+    // A checkbox style or grouping item for display.
+    let cBox = GroupItem (componentGroup, subSheet)
+
+    // The summary label for this group row
+    let summaryElement = summaryName ws cBox subSheet wavesInGroup
+
+    // Build a row (tr) for each wave in the group
+    let rowItems =
+        wavesInGroup
+        |> List.map (fun wave ->
+            tr [] [
+                // Wave name
+                td [] [ str wave.ViewerDisplayName ]
+                // Individual wave checkbox
+                td [] [
+                    input [
+                        Type "Checkbox"
+                        // Possibly calls user-defined toggleWaveSelection / isWaveSelected:
+                        OnChange (fun _ -> toggleWaveSelection wave.WaveId ws dispatch)
+                        Checked (isWaveSelected wave.WaveId ws)
+                    ] []
+                ]
+            ]
+        )
+
+    // Wrap the group in a selection group that can expand or collapse
+    makeSelectionGroup
+        showDetails
+        ws
+        dispatch
+        summaryElement
+        rowItems
+        cBox
+        wavesInGroup
+
+/// Renders a flat list of waves, grouped first by subSheet name, then by component group.
+/// Each subSheet is wrapped in a collapsible selection group, containing component groups inside.
+let makeFlatList
+    (ws: WaveSimModel)
+    (dispatch: Msg -> Unit)
+    (waves: Wave list)
+    (showDetails: bool)
+    : ReactElement =
+
+    let fs = Simulator.getFastSim()
+
+    // 1) Group by subSheet name
+    let groupedBySubSheet =
+        waves
+        |> List.groupBy (fun w ->
+            match w.SubSheet with
+            | [] -> "Top-Level"
+            | path -> String.concat "." path
+        )
+
+    /// Local helper to handle grouping waves by component within one subSheet,
+    /// then wrapping them in a selection group for that subSheet.
+    let buildSubSheetRow subSheetName (wavesInSubSheet: Wave list) =
+        // Group by component
+        let componentGroups =
+            wavesInSubSheet
+            |> List.groupBy (fun w -> getCompGroup fs w)
+
+        // For each component group, build a group row
+        let groupRows =
+            componentGroups
+            |> List.map (fun (grp, groupWaves) ->
+                makeFlatGroupRow showDetails ws dispatch [] grp groupWaves
+            )
+
+        // Wrap all component groups for this subSheet in one collapsible "sheet" group
+        makeSelectionGroup
+            showDetails
+            ws
+            dispatch
+            (str subSheetName)
+            groupRows
+            (SheetItem [subSheetName])
+            wavesInSubSheet
+
+    // 2) Build a row for each subSheet
+    let subSheetRows =
+        groupedBySubSheet
+        |> List.map (fun (subSheetName, wavesInSubSheet) ->
+            buildSubSheetRow subSheetName wavesInSubSheet
+        )
+
+    // 3) Render everything in a table
+    Table.table [
+        Table.IsBordered
+        Table.IsFullWidth
+        Table.Props [ Style [ BorderWidth 0 ] ]
+    ] [
+        tbody [] subSheetRows
+    ]
+
+/// Top-level render function that uses makeFlatList to display the final wave selection UI.
+/// Reads the WaveSelectionOutput, then calls makeFlatList with the final wave list.
+let renderwaves
+    (ws: WaveSimModel)
+    (dispatch: Msg -> unit)
+    (waveSelection: WaveSelectionOutput)
+    : ReactElement =
+
+    let showDetails = waveSelection.ShowDetails
+    let waveList    = waveSelection.WaveList
+
+    makeFlatList ws dispatch waveList showDetails
