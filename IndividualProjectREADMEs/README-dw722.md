@@ -1,6 +1,4 @@
-# HLP25CodeBdw722 README
-
-**GitHub Username: [Your GitHub Username]**
+**GitHub Username: CB-W03**
 
 ## Table of Contents
 
