@@ -18,8 +18,6 @@ open FilesIO
 open CatalogueView
 open TopMenuView
 open MenuHelpers
-//added libraries///////////////////
-open Fulma
 
 
 //NOTES
@@ -49,116 +47,6 @@ open Fulma
 /// When a breadcrumb is clicked the corresponding sheet name is displayed in the sheet box and displayed
 /// ports and components are restricted to those in the sheet.
 /// Box 1 has additional functionality: when it is changed the component and port boxes are emptied. (good?)
-
-//------------------------------------UI ELEMENTS FOR SEARCH BOXES----------------------------------//
-let searchBoxStyle = Style [
-    MarginBottom "1rem"
-    Width "30%"
-    Float FloatOptions.Left
-]
-
-let waveSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
-    //UI to handle search for wave names
-    div [] [
-        Input.text [
-            Input.Option.Props [searchBoxStyle] //change fields depending on styles of actual breadcrumb display
-            Input.Option.Placeholder "Search wave names..."
-            Input.Option.OnChange (fun value -> 
-                dispatch <| UpdateWSModel (fun wsm -> {wsModel with WaveSearchString = value.Value.ToUpper()})
-            )
-        ]
-    ]
-
-let sheetSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
-    //UI to handle search for sheet names
-    div [] [
-        Input.text [
-            Input.Option.Props [searchBoxStyle]
-            Input.Option.Placeholder "Search sheet names..."
-            Input.Option.OnChange (fun value ->
-                dispatch <| UpdateWSModel (fun wsm -> {wsModel with SheetSearchString = value.Value.ToUpper()})
-            )
-        ]
-    ]
-
-let componentSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
-    //UI to handle search for component names
-    div [] [
-        Input.text [
-            Input.Option.Props [searchBoxStyle]
-            Input.Option.Placeholder "Search component names..."
-            Input.Option.OnChange (fun value ->
-                dispatch <| UpdateWSModel (fun wsm -> {wsModel with ComponentSearchString = value.Value.ToUpper()})
-            )
-        ]
-    ]
-
-let portSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
-    //UI to handle search for port names
-    div [] [
-        Input.text [
-            Input.Option.Props [searchBoxStyle]
-            Input.Option.Placeholder "Search port names..."
-            Input.Option.OnChange (fun value ->
-                dispatch <| UpdateWSModel (fun wsm -> {wsModel with PortSearchString = value.Value.ToUpper()})
-            )
-        ]
-    ]
-//------------------------------------------------------------------------------------------------////
-//----------------------------------FILTERING FUNCTION(S) FOR EACH SEARCH BOX------------------------//
-
-let filterWaves (wsModel: WaveSimModel) (waves: Wave list) =
-    waves 
-    |> List.filter (fun wave -> 
-        let matchWave =
-            if wsModel.WaveSearchString = "" then true
-            else wave.ViewerDisplayName.ToUpper().Contains(wsModel.WaveSearchString)
-
-        let matchSheet = 
-            if wsModel.SheetSearchString = "" then true
-            else match wave.SubSheet with
-                    | [] -> (Simulator.getFastSim().SimulatedTopSheet)
-                                .ToUpper()
-                                .Contains(wsModel.SheetSearchString)
-                    | sheets -> sheets |> List.exists (fun sheetName -> sheetName.ToUpper().Contains(wsModel.SheetSearchString))
-
-        let matchComponent =
-            if wsModel.ComponentSearchString = "" then true
-            else wave.CompLabel.ToUpper().Contains(wsModel.ComponentSearchString)
-
-        let matchPort = 
-            if wsModel.PortSearchString = "" then true
-            else wave.PortLabel.ToUpper().Contains(wsModel.PortSearchString)
-
-        matchWave && matchSheet && matchComponent && matchPort
-        )
-
-let ensureWaveConsistency (ws:WaveSimModel) : (list<Wave> * list<WaveIndexT>) =
-    failwithf "already implemented in main issie code"
-let rec makeSheetRow (showDetails: bool) (ws: WaveSimModel) (dispatch: Msg -> unit) (subSheet: string list) (waves: Wave list) : ReactElement =
-    failwithf "already implemented in main issie code"
-//new fucntion to display wave selection rows using new filtering function
-let newSelectWaves (ws: WaveSimModel) (subSheet: string list) (dispatch: Msg -> unit) : ReactElement =
-    if not ws.WaveModalActive then div [] []
-    else
-        let okWaves, okSelectedWaves = ensureWaveConsistency ws
-        let wavesToDisplay = 
-            match ws.WaveSearchString with
-            | "-" when ws.ShowSheetDetail.Count <> 0 || ws.ShowComponentDetail.Count <> 0 || ws.ShowGroupDetail.Count <> 0 ->
-                dispatch <| SetWaveSheetSelectionOpen (ws.ShowSheetDetail |> Set.toList, false)
-                dispatch <| SetWaveGroupSelectionOpen (ws.ShowGroupDetail |> Set.toList, false)
-                dispatch <| SetWaveComponentSelectionOpen (ws.ShowComponentDetail |> Set.toList, false)
-                []
-            | "" | "-" -> filterWaves ws okWaves
-            | "*" -> 
-                okSelectedWaves
-                |> List.map (fun wi -> ws.AllWaves[wi])
-                |> fun waves -> filterWaves ws waves 
-            | _ -> filterWaves ws okWaves
-        let showDetails = ((wavesToDisplay.Length < 10)) 
-        wavesToDisplay
-        |> makeSheetRow showDetails ws dispatch []
-//------------------------------------------------------------------------------------------------////
 let searchBoxes (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
     // See MiscMenuView for Breadcrumb generation functions
     // see WaveSelectView for the existing Waveform Selector search box
@@ -242,6 +130,3 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : Reac
     // Although these are separate waves only one wave from each signal will be allowed in the waveform viewer.
     // Duplicates are filtered out: 
     failwithf "Not implemented yet"
-
-
-
