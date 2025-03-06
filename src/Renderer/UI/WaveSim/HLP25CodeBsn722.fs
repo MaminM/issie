@@ -313,60 +313,60 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
 
 
 //////////////////////////////////// TEST FUNCTIONS //////////////////////////////////////////
-let defaultWaveSimModel = {
-    DefaultCursor = CursorType.Default
-    WSConfig = {LastClock = 0; FirstClock = 0; FontSize = 12; FontWeight = 10}
-    WSConfigDialog = None
-    State = WaveSimState.Empty
-    TopSheet = ""
-    Sheets = Map.empty
-    AllWaves = Map.empty
-    SelectedWaves = []
-    Hlp25State = None
-    StartCycle = 0
-    ShownCycles = 0
-    SamplingZoom = 1
-    CursorDisplayCycle = 0
-    CursorExactClkCycle = 0
-    ClkCycleBoxIsEmpty = false
-    Radix = NumberBase.Dec 
-    WaveformColumnWidth = 0.0
-    WaveModalActive = false
-    RamModalActive = false
-    RamComps = []
-    SelectedRams = Map.empty
-    RamStartLocation = Map.empty
-    SearchString = "ALU"
-    ShowSheetDetail = Set.empty
-    ShowComponentDetail = Set.empty
-    ShowGroupDetail = Set.empty
-    HoveredLabel = None
-    DraggedIndex = None
-    PrevSelectedWaves = None
-    ScrollbarTbWidth = 0.0
-    ScrollbarTbPos = 0.0
-    ScrollbarTbOffset = None
-    ScrollbarBkgWidth = 0.0
-    ScrollbarBkgRepCycs = 0
-    ScrollbarQueueIsEmpty = true
-}
+// let defaultWaveSimModel = {
+//     DefaultCursor = CursorType.Default
+//     WSConfig = {LastClock = 0; FirstClock = 0; FontSize = 12; FontWeight = 10}
+//     WSConfigDialog = None
+//     State = WaveSimState.Empty
+//     TopSheet = ""
+//     Sheets = Map.empty
+//     AllWaves = Map.empty
+//     SelectedWaves = []
+//     Hlp25State = None
+//     StartCycle = 0
+//     ShownCycles = 0
+//     SamplingZoom = 1
+//     CursorDisplayCycle = 0
+//     CursorExactClkCycle = 0
+//     ClkCycleBoxIsEmpty = false
+//     Radix = NumberBase.Dec 
+//     WaveformColumnWidth = 0.0
+//     WaveModalActive = false
+//     RamModalActive = false
+//     RamComps = []
+//     SelectedRams = Map.empty
+//     RamStartLocation = Map.empty
+//     SearchString = "ALU"
+//     ShowSheetDetail = Set.empty
+//     ShowComponentDetail = Set.empty
+//     ShowGroupDetail = Set.empty
+//     HoveredLabel = None
+//     DraggedIndex = None
+//     PrevSelectedWaves = None
+//     ScrollbarTbWidth = 0.0
+//     ScrollbarTbPos = 0.0
+//     ScrollbarTbOffset = None
+//     ScrollbarBkgWidth = 0.0
+//     ScrollbarBkgRepCycs = 0
+//     ScrollbarQueueIsEmpty = true
+// }
 
 
-let testWaveSelectBreadcrumbs model dispatch =
-    let action _ _ = ()
-    PopupHelpers.closablePopup
-        "Design Hierarchy of current sheet"
-        (waveSelectBreadcrumbs defaultWaveSimModel dispatch model)
-        (div [] []) []
-        dispatch
+// let testWaveSelectBreadcrumbs model dispatch =
+//     let action _ _ = ()
+//     PopupHelpers.closablePopup
+//         "Design Hierarchy of current sheet"
+//         (waveSelectBreadcrumbs defaultWaveSimModel dispatch model)
+//         (div [] []) []
+//         dispatch
 
-let testWaveSelectModal model dispatch =
-    let action _ _ = ()
-    PopupHelpers.closablePopup
-        "Select Waves Modal"
-        (selectWavesModalHlp25 defaultWaveSimModel dispatch model)
-        (div [] []) []
-        dispatch
+// let testWaveSelectModal model dispatch =
+//     let action _ _ = ()
+//     PopupHelpers.closablePopup
+//         "Select Waves Modal"
+//         (selectWavesModalHlp25 defaultWaveSimModel dispatch model)
+//         (div [] []) []
+//         dispatch
 
 
 //////////////////////////////////// CHANGES MADE TO THE ORIGINAL CODE //////////////////////////////////////////

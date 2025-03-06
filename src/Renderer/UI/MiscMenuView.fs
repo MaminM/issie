@@ -32,7 +32,8 @@ type BreadcrumbConfig = {
     ElementProps: IHTMLProp list
     ElementStyleProps: CSSProp list
     /// button options (other than OnClick and Color)
-    ButtonOptions: Button.Option list 
+    ButtonOptions: Button.Option list
+    NoWaves: SheetTree -> int 
     }
 
 module Constants =
@@ -44,7 +45,7 @@ module Constants =
                 BorderStyle "solid";
                 Padding "50px"]
 
-    let defaultConfig = {
+    let defaultConfig: BreadcrumbConfig = {
         AllowDuplicateSheets = false
         BreadcrumbIdPrefix = "BreadcrumbDefault"
         ColorFun = fun _ -> IColor.IsGreyDark
@@ -64,6 +65,7 @@ module Constants =
                 Button.IsFocused true
                 Button.Disabled false
                 ]
+        NoWaves = (fun _ -> 0)
     }
 
 //--------------------------------------------------------------------------------------------//
