@@ -629,7 +629,7 @@ let selectWaves (ws: WaveSimModel) (subSheet: string list) (dispatch: Msg -> uni
                 okWaves
             | "*" ->
                 okSelectedWaves
-                |> List.map (fun wi -> ws.AllWaves[wi])                       
+                |> List.map (fun wi -> ws.AllWaves[wi])                           
             | _ ->
                 List.filter (fun x -> x.ViewerDisplayName.ToUpper().Contains(searchText)) okWaves
         let waveDisplayNames = wavesToDisplay |> List.map (fun wave -> wave.ViewerDisplayName)

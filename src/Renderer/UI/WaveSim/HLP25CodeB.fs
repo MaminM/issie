@@ -21,6 +21,14 @@ open MenuHelpers
 open MiscMenuView
 open Fulma
 
+
+//NOTES
+// add new field to WsModel for search string, eg: 
+// waveSearchString, sheetSearchString, 
+// componentSearchString, portSearchString
+// make filtering functions that use these search strings.
+//filtering functions will contain match statements for search strings
+
 //------------------------------------- Part B ---------------------------------------------------//
 //----------------------------- Sample Code for HLP25 --------------------------------------------//
 //----------------------------- use these to get started -----------------------------------------//
@@ -164,6 +172,3 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : Reac
     // Although these are separate waves only one wave from each signal will be allowed in the waveform viewer.
     // Duplicates are filtered out: 
     failwithf "Not implemented yet"
-
-
-
