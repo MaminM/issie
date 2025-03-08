@@ -313,43 +313,49 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
 
 
 //////////////////////////////////// TEST FUNCTIONS //////////////////////////////////////////
-// let defaultWaveSimModel = {
-//     DefaultCursor = CursorType.Default
-//     WSConfig = {LastClock = 0; FirstClock = 0; FontSize = 12; FontWeight = 10}
-//     WSConfigDialog = None
-//     State = WaveSimState.Empty
-//     TopSheet = ""
-//     Sheets = Map.empty
-//     AllWaves = Map.empty
-//     SelectedWaves = []
-//     Hlp25State = None
-//     StartCycle = 0
-//     ShownCycles = 0
-//     SamplingZoom = 1
-//     CursorDisplayCycle = 0
-//     CursorExactClkCycle = 0
-//     ClkCycleBoxIsEmpty = false
-//     Radix = NumberBase.Dec 
-//     WaveformColumnWidth = 0.0
-//     WaveModalActive = false
-//     RamModalActive = false
-//     RamComps = []
-//     SelectedRams = Map.empty
-//     RamStartLocation = Map.empty
-//     SearchString = "ALU"
-//     ShowSheetDetail = Set.empty
-//     ShowComponentDetail = Set.empty
-//     ShowGroupDetail = Set.empty
-//     HoveredLabel = None
-//     DraggedIndex = None
-//     PrevSelectedWaves = None
-//     ScrollbarTbWidth = 0.0
-//     ScrollbarTbPos = 0.0
-//     ScrollbarTbOffset = None
-//     ScrollbarBkgWidth = 0.0
-//     ScrollbarBkgRepCycs = 0
-//     ScrollbarQueueIsEmpty = true
-// }
+let defaultWaveSimModel: WaveSimModel = {
+    DefaultCursor = CursorType.Default
+    WSConfig = {LastClock = 0; FirstClock = 0; FontSize = 12; FontWeight = 10}
+    WSConfigDialog = None
+    State = WaveSimState.Empty
+    TopSheet = ""
+    Sheets = Map.empty
+    AllWaves = Map.empty
+    SelectedWaves = []
+    Hlp25State = None
+    StartCycle = 0
+    ShownCycles = 0
+    SamplingZoom = 1
+    CursorDisplayCycle = 0
+    CursorExactClkCycle = 0
+    ClkCycleBoxIsEmpty = false
+    Radix = NumberBase.Dec 
+    WaveformColumnWidth = 0.0
+    WaveModalActive = false
+    RamModalActive = false
+    RamComps = []
+    SelectedRams = Map.empty
+    RamStartLocation = Map.empty
+    SearchString = "ALU"
+    ShowSheetDetail = Set.empty
+    ShowComponentDetail = Set.empty
+    ShowGroupDetail = Set.empty
+    HoveredLabel = None
+    DraggedIndex = None
+    PrevSelectedWaves = None
+    ScrollbarTbWidth = 0.0
+    ScrollbarTbPos = 0.0
+    ScrollbarTbOffset = None
+    ScrollbarBkgWidth = 0.0
+    ScrollbarBkgRepCycs = 0
+    ScrollbarQueueIsEmpty = true
+    WaveSearchString = ""
+    SheetSearchString = ""
+    ComponentSearchString = ""
+    PortSearchString = ""
+    ComponentTypeSearchString = ""
+    HighlightedSheets = Set.empty
+}
 
 
 // let testWaveSelectBreadcrumbs model dispatch =

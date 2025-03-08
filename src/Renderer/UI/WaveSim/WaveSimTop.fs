@@ -22,6 +22,7 @@ open SimGraphTypes
 open SimTypes
 open WaveSimNavigation
 open DiagramStyle
+open HLP25CodeBsn722
 
 open WaveSimSVGs.Constants
 open Optics
@@ -460,7 +461,8 @@ let viewWaveSim canvasState (model: Model) dispatch : ReactElement =
         ]
     ] [
         WaveSimSelect.selectRamModal wsModel dispatch
-        WaveSimSelect.selectWavesModal wsModel dispatch model
+        //WaveSimSelect.selectWavesModal wsModel dispatch model
+        HLP25CodeBsn722.selectWavesModalHlp25 wsModel dispatch model
         div [ viewWaveSimStyle ]
             [
                 top

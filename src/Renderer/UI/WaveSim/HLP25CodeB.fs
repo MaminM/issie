@@ -18,16 +18,6 @@ open FilesIO
 open CatalogueView
 open TopMenuView
 open MenuHelpers
-open MiscMenuView
-open Fulma
-
-
-//NOTES
-// add new field to WsModel for search string, eg: 
-// waveSearchString, sheetSearchString, 
-// componentSearchString, portSearchString
-// make filtering functions that use these search strings.
-//filtering functions will contain match statements for search strings
 
 //------------------------------------- Part B ---------------------------------------------------//
 //----------------------------- Sample Code for HLP25 --------------------------------------------//
@@ -86,51 +76,11 @@ let implementWaveSelector (wsModel: WaveSimModel) (dispatch: Msg -> unit) (wTree
 /// Displays a breadcrumb display of the simulation design sheet hierarchy with
 /// coloured sheets indicating where the search string is found. Possibly the number of
 /// matches in each sheet is displayed.
-let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model: Model): ReactElement =
+let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
     // See MiscMenuView for Breadcrumb generation functions
     // see WaveSelectView for the existing Waveform Selector search box
     // Use the existing Waveform Selector search box as a template for the new search boxes.
-    match model.CurrentProj with
-    | None -> div [] [str "No project open"]
-    | Some project ->
-        let updatedProject = ModelHelpers.getUpdatedLoadedComponents project model
-        let updatedModel = {model with CurrentProj = Some updatedProject}
-        let okWaves, okSelectedWaves = WaveSimSelect.ensureWaveConsistency wsModel
-        let searchText = wsModel.SearchString
-        let filteredWaves = 
-            match searchText with
-            | "" | "-" -> okWaves
-            | "*" -> okSelectedWaves |> List.map (fun wi -> wsModel.AllWaves[wi])
-            | _ -> List.filter (fun x -> x.ViewerDisplayName.ToUpper().Contains(searchText)) okWaves
-
-        let filteredWaveNames = filteredWaves |> List.map (fun wave -> wave.ViewerDisplayName)
-
-        let sheetNames = filteredWaveNames |> List.map (fun name -> name.Split('.') |> Array.head) //|> List.distinct  // List of sheet names
-
-        let sheetCounts = sheetNames |> List.groupBy id |> List.map (fun (name, waves) -> name, waves.Length)  // Hashamp of sheet name to number of waves in that sheet
-
-
-        let sheetColor (sheet:SheetTree) =
-            match List.contains sheet.SheetName sheetNames with
-            | true -> IColor.IsCustomColor "yellow"
-            | false -> IColor.IsInfo
-
-        let breadcrumbConfig =  {
-            MiscMenuView.Constants.defaultConfig with
-                ColorFun = sheetColor
-                //BreadcrumbIdPrefix = "SheetMenuBreadcrumb"
-            }
-
-        let breadcrumbs = [
-                div [Style [TextAlign TextAlignOptions.Center; FontSize "15px"]] [str "Sheets with Design Hierarchy"]
-                MiscMenuView.hierarchyBreadcrumbs breadcrumbConfig dispatch updatedModel
-                ]
-            
-        // create a div with the breadcrumbs and the search boxes
-        div [] (breadcrumbs)
-
-
-
+    failwithf "Not implemented yet"
 
 /// Displays a react element that allows the user to select waves for display in the waveform viewer.
 let selectWavesHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
@@ -172,3 +122,5 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) : Reac
     // Although these are separate waves only one wave from each signal will be allowed in the waveform viewer.
     // Duplicates are filtered out: 
     failwithf "Not implemented yet"
+
+
