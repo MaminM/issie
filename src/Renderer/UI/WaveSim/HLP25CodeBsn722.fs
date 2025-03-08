@@ -24,6 +24,7 @@ open Fulma.Extensions.Wikiki
 open MiscMenuView
 open Constants
 open Browser.Types
+open HLP25CodeBdw722
 
 //------------------------------------- Part B ---------------------------------------------------//
 //----------------------------- Sample Code for HLP25 --------------------------------------------//
@@ -72,12 +73,11 @@ let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
 
         // Helper: Filter waves based on search string
         let filteredWaves =
-            match wsModel.SearchString with
-            | "" | "-" -> okWaves
+            match wsModel.WaveSearchString with
+            | "" | "-" -> filterWaves wsModel okWaves dispatch
             | "*" -> okSelectedWaves |> List.map (fun waveId -> wsModel.AllWaves.[waveId])
-            | search ->
-                let searchUpper = search.ToUpperInvariant()
-                okWaves |> List.filter (fun wave -> wave.ViewerDisplayName.ToUpperInvariant().Contains(searchUpper))
+                                     |> fun waves -> filterWaves wsModel waves dispatch
+            | _ -> filterWaves wsModel okWaves dispatch
 
         let filteredWaveNames = filteredWaves |> List.map (fun wave -> wave.ViewerDisplayName)
 
@@ -108,7 +108,7 @@ let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
         // When a breadcrumb is clicked, update the search string to the sheet name. This is used to filter waves.
         let updateSearchStringHelper (sheet: SheetTree) : (Msg -> unit) -> unit =
             fun dispatch ->
-                dispatch (UpdateWSModel (fun ws -> { ws with SearchString = sheet.SheetName.ToUpperInvariant() }))
+                dispatch (UpdateWSModel (fun ws -> { ws with SheetSearchString = sheet.SheetName.ToUpperInvariant() }))
 
         // Build the breadcrumb configuration using our helper functions
         let breadcrumbConfig = {
@@ -129,49 +129,6 @@ let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
 
 
 ////////////////////// HELPER FUNCTIONS  //////////////////////
-let searchBox
-    (placeholder : string)
-    (wsModel : WaveSimModel)
-    (dispatch : Msg -> unit)
-    : ReactElement =
-    
-    Control.p [ Control.IsExpanded ] [
-        Input.text [
-            Input.Option.Placeholder placeholder
-            Input.Option.OnChange (fun c ->
-                dispatch <| UpdateWSModel (fun ws -> {wsModel with SearchString = c.Value.ToUpper()})
-            )
-        ]
-    ]
-    
-
-let searchBoxesDummy (wsModel : WaveSimModel) (dispatch : Msg -> unit) : ReactElement =
-    Field.div [ Field.IsGrouped ] [
-        // 1. Wave name search
-        searchBox
-            "Search wave names..."
-            wsModel
-            dispatch
-
-        // 2. Sheet name search
-        searchBox
-            "Search sheet names..."
-            wsModel
-            dispatch
-
-        // 3. Component name search
-        searchBox
-            "Search component names..."
-            wsModel
-            dispatch
-
-        // 4. Port name search
-        searchBox
-            "Search port names..."
-            wsModel
-            dispatch
-    ]
-
 
 let infoButton  : ReactElement =
     div 
@@ -291,9 +248,15 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                     Style [
                         GridColumn "1 / span 2"
                         MarginBottom "15px"
+                        Display DisplayOptions.Flex
+                        FlexDirection "column"
                     ]
                 ] [
-                    searchBoxesDummy wsModel dispatch
+                    div [] [waveSearchBox wsModel dispatch]
+                    div [] [ sheetSearchBox wsModel dispatch ]
+                    div [] [ componentSearchBox wsModel dispatch ]
+                    div [] [ portSearchBox wsModel dispatch ]
+                    div [] [ componentTypeSearchBox wsModel dispatch ]
                 ]
                 // Left column: placeholder for wave selection component
                 div [] [ str "Select Waves Component (placeholder)" ]

@@ -59,8 +59,7 @@ open Fulma
 // Default styling for each search box
 let searchBoxStyle = Style [
     MarginBottom "1rem"
-    Width "30%"
-    Float FloatOptions.Left
+    Width "50%"
 ]
 
 // Search box wave names

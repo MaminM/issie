@@ -809,6 +809,3 @@ let selectRamModal (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElemen
                 Modal.Card.foot [] []
             ]
         ]
-
-
-
