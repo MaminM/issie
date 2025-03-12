@@ -25,6 +25,7 @@ open MiscMenuView
 open Constants
 open Browser.Types
 open HLP25CodeBdw722
+open HLP25CodeBsc3321
 
 //------------------------------------- Part B ---------------------------------------------------//
 //----------------------------- Sample Code for HLP25 --------------------------------------------//
@@ -36,6 +37,10 @@ open HLP25CodeBdw722
 /// Displays a breadcrumb display of the simulation design sheet hierarchy with
 /// coloured sheets indicating where the search string is found. Possibly the number of
 /// matches in each sheet is displayed.
+/// 
+/// 
+/// 
+
 
 
 /////////////////////////////// Helper Functions //////////////////////////////////////
@@ -54,6 +59,8 @@ let ensureWaveConsistency (ws:WaveSimModel) =
         if okSelectedWaves.Length <> ws.SelectedWaves.Length then
             printfn $"ok selected waves length = {okSelectedWaves.Length} <> selectedwaves length = {ws.SelectedWaves.Length}"
         okWaves, okSelectedWaves 
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model: Model): ReactElement =
@@ -259,7 +266,11 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                     div [] [ componentTypeSearchBox wsModel dispatch ]
                 ]
                 // Left column: placeholder for wave selection component
-                div [] [ str "Select Waves Component (placeholder)" ]
+                
+                div [] [
+                            let wavestooutput = selectWavesHlp25 wsModel dispatch
+                            wavestooutput |> renderwaves wsModel dispatch 
+                        ]
                 // Right column: Breadcrumb display
                 div [] [ waveSelectBreadcrumbs wsModel dispatch model ]
             ]
@@ -319,6 +330,11 @@ let defaultWaveSimModel: WaveSimModel = {
     ComponentTypeSearchString = ""
     HighlightedSheets = Set.empty
 }
+
+
+
+
+
 
 
 // let testWaveSelectBreadcrumbs model dispatch =
