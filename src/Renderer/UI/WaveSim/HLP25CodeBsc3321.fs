@@ -25,6 +25,8 @@ open CatalogueView
 open TopMenuView
 open MenuHelpers
 
+open HLP25CodeBdw722
+
 //------------------------------------- Part B ---------------------------------------------------//
 //----------------------------- Sample Code for HLP25 --------------------------------------------//
 //----------------------------- use these to get started -----------------------------------------//
@@ -368,6 +370,7 @@ let selectWavesHlp25 (ws: WaveSimModel) (dispatch: Msg -> unit) : WaveSelectionO
         let okWaves, okSelectedWaves = ensureWaveConsistency ws
         let searchText = ws.SearchString.ToUpper()
         let wavesToDisplay = filterSelectedWaves ws searchText okWaves okSelectedWaves
+        
         let showDetails = 
             ((wavesToDisplay.Length < 10) || searchText.Length > 0)
             && searchText <> "-"
