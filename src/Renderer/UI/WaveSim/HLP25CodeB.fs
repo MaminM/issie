@@ -83,14 +83,14 @@ let filterWaves (wsModel: WaveSimModel) (waves: Wave list) (dispatch: Msg -> uni
 
             // Check for wave name matches.
             let matchesWave, updatedSheets4 =
-                if wsModel.WaveSearchString = "" then true, updatedSheets3
+                if wsModel.WaveSearchString = "" || wsModel.WaveSearchString = "*" then true, updatedSheets3
                 else 
                     let matches = wave.ViewerDisplayName.ToUpper().Contains(wsModel.WaveSearchString)
                     if matches then true, addMatchingSheet wave.SubSheet else false, updatedSheets3
 
             // Check for component type matches.
             let matchesComponentType, updatedSheets5 =
-                if wsModel.ComponentTypeSearchString = "" then true, updatedSheets4
+                if wsModel.ComponentTypeSearchString = "" || wsModel.ComponentTypeSearchString = "*" then true, updatedSheets4
                 else
                     let fs = Simulator.getFastSim()
                     let comp = fs.WaveComps.[wave.WaveId.Id]
@@ -170,6 +170,7 @@ let sheetSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElemen
 let componentSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
     div [ searchBoxContainerStyle ] [
         Input.text [
+            Input.Option.Value wsModel.ComponentSearchString
             Input.Option.Props [ Style [ MarginBottom "1rem"; Width "100%" ] ]
             Input.Option.Placeholder "Search component names..."
             Input.Option.OnChange (fun value ->
@@ -182,6 +183,7 @@ let componentSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactEl
 let portSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
     div [ searchBoxContainerStyle ] [
         Input.text [
+            Input.Option.Value wsModel.PortSearchString
             Input.Option.Props [ Style [ MarginBottom "1rem"; Width "100%" ] ]
             Input.Option.Placeholder "Search port names..."
             Input.Option.OnChange (fun value ->
