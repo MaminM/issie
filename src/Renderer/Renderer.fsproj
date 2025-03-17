@@ -124,6 +124,7 @@
     <Compile Include="UI\WaveSim\HLP25CodeBdw722.fs" />
     <Compile Include="UI\WaveSim\HLP25CodeBsc3321.fs" />
     <Compile Include="UI\WaveSim\HLP25CodeBsn722.fs" />
+    <Compile Include="UI\WaveSim\HLP25CodeB_aam522.fs" />
     <Compile Include="UI\WaveSim\HLP25CodeB.fs" />
     <Compile Include="UI\WaveSim\WaveSimSelect.fs" />
     <Compile Include="UI\WaveSim\WaveSimSVGs.fs" />
