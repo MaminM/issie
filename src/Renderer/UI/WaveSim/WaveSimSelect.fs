@@ -26,6 +26,7 @@ open UIPopups
 open MenuHelpers
 open TopMenuView
 open HLP25CodeBsn722
+open HLP25CodeB
 
 //--------------------------------------------------------------------------------------------------------//
 //--------------------------------------------------------------------------------------------------------//
@@ -635,9 +636,9 @@ let selectWaves (ws: WaveSimModel) (subSheet: string list) (dispatch: Msg -> uni
                 List.filter (fun x -> x.ViewerDisplayName.ToUpper().Contains(searchText)) okWaves
         let showDetails = ((wavesToDisplay.Length < 10) || searchText.Length > 0) && searchText <> "-"
         wavesToDisplay
-        |> makeSheetRow showDetails ws dispatch []
-
-
+        // |> makeSheetRow showDetails ws dispatch []
+        |> makeWaveDisplayTree ws showDetails 
+        |> implementWaveSelector ws dispatch
 
 
 /// Button to activate wave selection modal
