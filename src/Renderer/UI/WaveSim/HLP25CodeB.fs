@@ -580,12 +580,13 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                     componentTypeSearchBox wsModel dispatch
                 ]
                 // Left column: Wave selection component.
+                div [] [ waveSelectBreadcrumbs wsModel dispatch model ]
+                
+                // Right column: Breadcrumb display.
                 div [] [
                     let waveselect = selectWavesHlp25 wsModel dispatch
                     renderwaves wsModel dispatch waveselect
                 ]
-                // Right column: Breadcrumb display.
-                div [] [ waveSelectBreadcrumbs wsModel dispatch model ]
             ]
             // Footer with Done button.
             Modal.Card.foot [ Props [ Style [ Display DisplayOptions.InlineBlock; Float FloatOptions.Right ] ] ] [
