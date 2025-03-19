@@ -42,6 +42,12 @@ type CSSGridPos =
 
 
 let initWSModel  : WaveSimModel = {
+    WaveSearchString = ""
+    SheetSearchString = ""
+    ComponentSearchString = ""
+    PortSearchString = ""
+    ComponentTypeSearchString= ""
+    HighlightedSheets = Set.empty
     Hlp25State = None
     DefaultCursor = CursorType.Default
     TopSheet = ""

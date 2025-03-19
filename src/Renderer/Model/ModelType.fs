@@ -233,6 +233,12 @@ let fontWeight_ = Lens.create (fun a -> a.FontWeight) (fun s a -> {a with FontWe
 /// Contains all information required by waveform simulator.
 /// One WaveSimModel per sheet.
 type WaveSimModel = {
+    WaveSearchString: string
+    SheetSearchString: string
+    ComponentSearchString: string
+    PortSearchString: string
+    ComponentTypeSearchString: string
+    HighlightedSheets: Set<string list>
     /// default value for cursor in waveform Simulator
     DefaultCursor : CursorType
     /// Configuration for the waveform simulator.//
