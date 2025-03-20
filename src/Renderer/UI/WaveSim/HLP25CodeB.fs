@@ -234,10 +234,25 @@ let waveSelectBreadcrumbs (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                 |> Array.toList)
         let sheetCounts = sheetNames |> List.countBy id
         let sheetColor (sheet: SheetTree) =
-            if List.contains (sheet.SheetName.ToLowerInvariant()) sheetNames then 
-                IColor.IsCustomColor "pink"
-            else 
-                IColor.IsCustomColor "darkslategrey"
+            let sheetName = sheet.SheetName.Trim().ToUpperInvariant()
+            let sheetSearch = wsModel.SheetSearchString.Trim().ToUpperInvariant()
+            // Collect the other search strings.
+            let otherSearches =
+                [ wsModel.WaveSearchString; wsModel.ComponentSearchString; wsModel.PortSearchString; wsModel.ComponentTypeSearchString ]
+                |> List.map (fun s -> s.Trim().ToUpperInvariant())
+                |> List.filter ((<>) "")
+            if sheetSearch <> "" then
+                // If a sheet is clicked then highlight it exclusively.
+                if sheetName = sheetSearch then
+                    IColor.IsCustomColor "pink"
+                else
+                    IColor.IsCustomColor "darkslategrey"
+            else
+                // If no sheet is clicked, check if the sheetName matches any other search string.
+                if otherSearches |> List.exists (fun search -> sheetName.Contains(search)) then
+                    IColor.IsCustomColor "pink"
+                else
+                    IColor.IsCustomColor "darkslategrey"
         let sheetMatches (sheet: SheetTree) =
             match List.tryFind (fun (name, _) -> name = sheet.SheetName.ToLowerInvariant()) sheetCounts with
             | Some (_, count) -> count
@@ -523,7 +538,7 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
             Props [ OnClick (fun _ -> dispatch (UpdateWSModel (fun ws -> { ws with WaveModalActive = false }))) ]
         ] []
         // Main modal card.
-        Modal.Card.card [ Props [ Style [ MinWidth "80%" ] ] ] [
+        Modal.Card.card [ Props [ Style [ MinWidth "90%" ] ] ] [
             // Header with title and delete button.
             Modal.Card.head [] [
                 Modal.Card.title [] [
@@ -538,10 +553,51 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                     ]
                 ]
             ]
+            // Add an empty head that gels with the body.
+            Modal.Card.head [
+                Props [
+                    Style [
+                        BackgroundColor "white"
+                        Border "none"
+                        Margin "0"
+                        Padding "0"
+                        Height "auto"
+                        BorderTopLeftRadius "0"
+                        BorderTopRightRadius "0"
+                    ]
+                ]
+            ] [
+                div [
+                    Style [
+                        GridColumn "1 / span 2"
+                        MarginBottom "15px"
+                        MarginTop "15px"
+                        Display DisplayOptions.Flex
+                        FlexDirection "row"
+                        FlexWrap "wrap"
+                        MarginLeft "10px"
+                    ]
+                ] [
+                    waveSearchBox wsModel dispatch
+                    sheetSearchBox wsModel dispatch
+                    componentSearchBox wsModel dispatch
+                    portSearchBox wsModel dispatch
+                    componentTypeSearchBox wsModel dispatch
+                    div [ Style [ Display DisplayOptions.Flex; AlignItems AlignItemsOptions.Center; MarginBottom "20px" ] ] [
+                        infoButton
+                        div [ Style [ MarginLeft "10px" ] ] [
+                            str (sprintf "%d waves selected" (List.length wsModel.SelectedWaves))
+                        ]
+                    ]
+                ]
+
+            ]
+
             // Body with info row, search boxes row, then two columns for selection and breadcrumbs.
             Modal.Card.body [
                 Props [
                     Style [
+                        Height "55vh"
                         OverflowY OverflowOptions.Visible
                         Display DisplayOptions.Grid
                         GridTemplateColumns "1fr 1fr"
@@ -550,40 +606,24 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                     ]
                 ]
             ] [
-                // Top row: info button and waves count.
-                div [
-                    Style [
-                        GridColumn "1 / span 2"
-                        MarginBottom "15px"
-                        Display DisplayOptions.Flex
-                        JustifyContent "space-between"
-                        AlignItems AlignItemsOptions.Center
-                    ]
-                ] [
-                    div [] [ infoButton ]
-                    div [] [ str (sprintf "%d waves selected" (List.length wsModel.SelectedWaves)) ]
-                ]
-                // Search boxes row: arranged horizontally with wrapping if needed.
-                div [
-                    Style [
-                        GridColumn "1 / span 2"
-                        MarginBottom "15px"
-                        Display DisplayOptions.Flex
-                        FlexDirection "row"
-                        FlexWrap "wrap"
-                    ]
-                ] [
-                    waveSearchBox wsModel dispatch
-                    sheetSearchBox wsModel dispatch
-                    componentSearchBox wsModel dispatch
-                    portSearchBox wsModel dispatch
-                    componentTypeSearchBox wsModel dispatch
-                ]
-                // Left column: Wave selection component.
-                div [] [ waveSelectBreadcrumbs wsModel dispatch model ]
                 
-                // Right column: Breadcrumb display.
-                div [] [
+                // Left column: breadcrumbs with its own scrollbar.
+                div [
+                    Style [
+                        Height "100%"
+                        OverflowY OverflowOptions.Auto
+                    ]
+                ] [ 
+                    waveSelectBreadcrumbs wsModel dispatch model 
+                ]
+
+                // Right column: wave selection with its own scrollbar.
+                div [
+                    Style [
+                        Height "100%"
+                        OverflowY OverflowOptions.Auto
+                    ]
+                ] [
                     let waveselect = selectWavesHlp25 wsModel dispatch
                     renderwaves wsModel dispatch waveselect
                 ]
