@@ -127,6 +127,28 @@ Below are functions that significantly impact the UI or logic. Each is documente
 
 ---
 
+## Post Demo Improvements
+
+Below are the following bugs we noticed during the demo and any improvements our Supevisor mentioned aswell:
+
+- Search bars should be in line with info button and 'X waves selected' test. We should show more value towards vertical height.
+
+- Search bars should be in a fixed position and user should always see them when they scroll up or down.
+
+- Separate scrollbars should be used on breadcrumbs and wave select respectively. Once again vertical height should be mentioned.
+
+- Ensure we're able to select/unselect all waves without issue especially when clicking the 'Done' button
+
+- Correct Breadcrumb sheet should be highlighted when clicked, this mainly applies to the 'leaf' sheets of the hierarchy like 'cond', 'addsub', 'shift1' etc.
+
+We have aimed to solve these additional aims in order to create a Modal design that's capable of satisfying the Supervisor's needs. We have also attempted to implement an auto-complete wave search feature which can be seen [here](https://example.com/your-placeholder) but the CSS styling is preventing the appearance from being able to deal with zooming in and out. The improved result can now be seen in the GIF below:
+
+
+![Project B Evidence](static/ProjectBEvidence.gif)
+
+
+---
+
 ## Future Enhancements
 
 1. **Dynamic Autocomplete**  

@@ -151,6 +151,42 @@ let waveSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement
         ]
     ]
 
+// let waveSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
+//     // Create autocomplete suggestions using the current waves.
+//     let suggestions =
+//         wsModel.AllWaves
+//         |> Map.values
+//         |> Seq.map (fun wave -> wave.ViewerDisplayName)
+//         |> Seq.distinct
+//         |> Seq.toList
+//     div [ searchBoxContainerStyle ] [
+//         Input.text [
+//             Input.Option.Value wsModel.WaveSearchString
+//             Input.Option.Props [
+//                 Style [ MarginBottom "1rem"; Width "100%" ]
+//                 // Link the input to the datalist for autocomplete.
+//                 HTMLAttr.Custom ("list", "waveSuggestions")
+//             ]
+//             Input.Option.Placeholder "Search wave names..."
+//             Input.Option.OnChange (fun value -> 
+//                 dispatch (UpdateWSModel (fun wsm ->
+//                     { wsm with
+//                         WaveSearchString = value.Value.ToUpper()
+//                         ComponentSearchString = "" // Clear component search when wave search changes.
+//                         PortSearchString = ""        // Clear port search when wave search changes.
+//                     }
+//                 ))
+//             )
+//         ]
+//         // The datalist element holding autocomplete suggestions.
+//         datalist [ HTMLAttr.Id "waveSuggestions" ] (
+//             suggestions
+//             |> List.map (fun suggestion ->
+//                 option [ HTMLAttr.Value suggestion ] []
+//             )
+//         )
+//     ]
+
 /// Search box for sheet names.
 let sheetSearchBox (wsModel: WaveSimModel) (dispatch: Msg -> unit) : ReactElement =
     div [ searchBoxContainerStyle ] [
@@ -553,7 +589,7 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                     ]
                 ]
             ]
-            // Add an empty head that gels with the body.
+            // Body with info row, search boxes row, then two columns for selection and breadcrumbs.
             Modal.Card.head [
                 Props [
                     Style [
@@ -583,10 +619,27 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
                     componentSearchBox wsModel dispatch
                     portSearchBox wsModel dispatch
                     componentTypeSearchBox wsModel dispatch
+                    // Info button and wave count.
                     div [ Style [ Display DisplayOptions.Flex; AlignItems AlignItemsOptions.Center; MarginBottom "20px" ] ] [
                         infoButton
                         div [ Style [ MarginLeft "10px" ] ] [
                             str (sprintf "%d waves selected" (List.length wsModel.SelectedWaves))
+                        ]
+                    ]
+                    // Select All button.
+                    div [ Style [ MarginLeft "15px"; Display DisplayOptions.Flex; AlignItems AlignItemsOptions.Center; MarginBottom "20px" ] ] [
+                        Checkbox.checkbox [] [
+                            Checkbox.input [
+                                Props [
+                                    Checked (wsModel.WaveSearchString = "*")
+                                    OnChange (fun _ ->
+                                        let newSearch =
+                                            if wsModel.WaveSearchString = "*" then "" else "*"
+                                        dispatch (UpdateWSModel (fun ws -> { ws with WaveSearchString = newSearch }))
+                                    )
+                                ]
+                            ]
+                            str "Select All Waves"
                         ]
                     ]
                 ]
@@ -597,7 +650,7 @@ let selectWavesModalHlp25 (wsModel: WaveSimModel) (dispatch: Msg -> unit) (model
             Modal.Card.body [
                 Props [
                     Style [
-                        Height "55vh"
+                        Height "70vh"
                         OverflowY OverflowOptions.Visible
                         Display DisplayOptions.Grid
                         GridTemplateColumns "1fr 1fr"
