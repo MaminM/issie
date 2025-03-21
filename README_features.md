@@ -141,7 +141,7 @@ Below are the following bugs we noticed during the demo and any improvements our
 
 - Correct Breadcrumb sheet should be highlighted when clicked, this mainly applies to the 'leaf' sheets of the hierarchy like 'cond', 'addsub', 'shift1' etc.
 
-We have aimed to solve these additional aims in order to create a Modal design that's capable of satisfying the Supervisor's needs. We have also attempted to implement an auto-complete wave search feature which can be seen [here](https://example.com/your-placeholder) but the CSS styling is preventing the appearance from being able to deal with zooming in and out. The improved result can now be seen in the GIF below:
+We have aimed to solve these additional aims in order to create a Modal design that's capable of satisfying the Supervisor's needs. We have also attempted to implement an auto-complete wave search feature which can be seen [here](https://github.com/MaminM/issie/blob/83ace01f9722b15063dfcbb09d1b32db3f58955c/src/Renderer/UI/WaveSim/HLP25CodeB.fs#L154-L188) but the CSS styling is preventing the appearance from being able to deal with zooming in and out. The improved result can now be seen in the GIF below:
 
 
 ![Project B Evidence](static/ProjectBEvidence.gif)
